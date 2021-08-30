@@ -1,0 +1,175 @@
+﻿<#@ template  debug="true" hostSpecific="true" #>
+<#@ output extension=".cs" #>
+<#@ Assembly Name="System.Core" #>
+<#@ Assembly Name="Microsoft.Web.Administration" #>
+<#@ import namespace="System" #>
+<#@ import namespace="System.IO" #>
+<#@ import namespace="System.Diagnostics" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Collections" #>
+<#@ import namespace="System.Collections.Generic" #> 
+<#@ import namespace="System.Reflection" #> 
+<#@ import namespace="Microsoft.Web.Administration" #>
+
+
+using System;
+using System.Collections.Generic;
+
+namespace SaburaIIS.POCO
+{
+<#
+	var baseType = typeof(ConfigurationElement);
+	var asm = baseType.Assembly;
+	var types = asm.GetTypes();
+	var elementTypes = types.Where(type => type.BaseType == baseType && type.ContainsGenericParameters == false);
+	var enums = new List<Type>();
+	var classes = new List<Type>();
+
+	var stack = new Stack<Type>(elementTypes);
+	while(stack.Count > 0)
+    {
+		var rootType = stack.Pop();
+		var propTypes = rootType.GetProperties(BindingFlags.Public|BindingFlags.Instance).Select(prop => prop.PropertyType);
+		foreach (var type in propTypes.Where(type => type.IsClass && type.BaseType != baseType && !type.IsArray).Distinct())
+        {
+			if (!classes.Contains(type))
+            {
+				classes.Add(type);
+				stack.Push(type);
+            }
+			else if (type.IsEnum)
+            {
+				enums.Add(type);
+            }
+        }
+		foreach (var type in propTypes.Where(type => type.IsEnum).Distinct())
+        {
+			if (!enums.Contains(type))
+            {
+				enums.Add(type);
+            }
+        }
+    }
+
+	foreach (var @class in elementTypes.Concat(classes).Where(type => !type.Name.EndsWith("Collection"))) 
+	{
+		OutputClass(@class);
+	} 
+
+	foreach (var @enum in enums.Distinct())
+    {
+		OutputEnum(@enum);
+    }
+#>
+}
+<#+
+	private void OutputClass(Type type)
+	{
+		var ignoreTypes = new []{typeof(ApplicationPoolDefaults), typeof(ApplicationDefaults), typeof(SiteDefaults), typeof(VirtualDirectoryDefaults)}; 
+		var baseTypes = new []{ typeof(ConfigurationElement), typeof(ConfigurationElementCollection), typeof(ConfigurationElementCollectionBase<>)};
+#>
+	public partial class <#= type.Name #>
+	{
+<#+
+		foreach (var prop in type.GetProperties(BindingFlags.Public|BindingFlags.Instance|BindingFlags.DeclaredOnly))
+		{
+			var indexedParams = prop.GetIndexParameters();
+			if(indexedParams.Count() == 1)
+            {
+				var indexedParam = indexedParams.First();
+#>
+		public <#= prop.PropertyType.Name #> this[<#= indexedParam.ParameterType.Name#> <#= indexedParam.Name #>]
+		{
+			get => throw new NotImplementedException();
+			set => throw new NotImplementedException();
+		}
+<#+		
+			}
+			else if (prop.PropertyType.IsEnum)
+			{
+#>
+		public <#= prop.PropertyType.Name #> <#= prop.Name #> { get; set; }
+<#+
+			}
+			else if (prop.PropertyType.IsValueType)
+			{
+#>
+		public <#= prop.PropertyType.Name #> <#= prop.Name #> { get; set; }
+<#+
+			}
+			else if (prop.PropertyType == typeof(string))
+			{
+#>
+		public string <#= prop.Name #> { get; set; }
+<#+
+			}
+			else if (prop.PropertyType.IsArray)
+			{
+#>
+		public <#= prop.PropertyType.Name #> <#= prop.Name #> { get; set; }
+<#+
+			}
+			else if (prop.PropertyType.IsClass && baseTypes.Any(baseType => prop.PropertyType.IsSubclassOf(baseType)))
+			{
+				if (prop.PropertyType.Name.EndsWith("Collection"))
+                {
+					var elementType = prop.PropertyType.BaseType.GenericTypeArguments.FirstOrDefault();
+					if (elementType == null)
+					{
+						var icollection = prop.PropertyType.GetInterfaces().Where(intf => intf.Name == "IEnumerable`1" || intf.Name == "ICollection`1").FirstOrDefault();
+						if (icollection != null) elementType = icollection.GenericTypeArguments.First();
+                    }
+#>
+		// <#= prop.PropertyType.Name #>
+		public ICollection<<#= elementType != null ? elementType.Name : "object" #>> <#= prop.Name #> { get; set; }
+<#+
+                }
+				else if(!ignoreTypes.Contains(prop.PropertyType))
+                {
+#>
+		public <#= prop.PropertyType.Name #> <#= prop.Name #> { get; set; }
+<#+
+				}
+				else 
+				{
+#>
+		// public <#= prop.PropertyType.Name #> <#= prop.Name #> { get; set; }
+<#+
+				}
+			}
+			else if (prop.PropertyType.IsInterface)
+			{
+				var generics = string.Join(",", prop.PropertyType.GetGenericArguments().Select(arg => arg.Name));
+#>
+		public <#= prop.PropertyType.Name.Substring(0, prop.PropertyType.Name.IndexOf('`')) #><<#=generics#>> <#= prop.Name #> { get; set; }
+<#+
+			}
+			else 
+			{
+#>
+		// public <#= prop.PropertyType.Name #> <#= prop.Name #> { get; set; }
+<#+
+			}
+		}
+#>
+	}
+<#+
+	}
+
+	private void OutputEnum(Type type)
+    {
+#>
+	public enum <#= type.Name #>
+	{
+<#+ 
+		foreach (var name in Enum.GetNames(type))
+		{
+ #>
+		<#= name #> = <#= (int)Enum.Parse(type, name) #>,
+<#+
+		}
+#>
+	}
+<#+
+    }
+#>
