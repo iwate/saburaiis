@@ -6,6 +6,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>saburaiis</ToolCommandName>
     <Nullable>enable</Nullable>
+    <Version>$(Version)</Version>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,0 +1,78 @@
+name: release
+
+on:
+  release:
+    types: [published]
+jobs:
+  release:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+        node-version: 14.x
+
+    - name: Restore dependencies
+      working-directory: src
+      run: dotnet restore
+
+    - name: Build
+      working-directory: src
+      run: dotnet build -c Release --no-restore
+
+    - name: Test
+      working-directory: src
+      run: dotnet test -c Release --no-build --verbosity normal
+
+    - name: Publish Agent
+      working-directory: src/SaburaIIS.Agent/
+      run: dotnet publish -c Release --no-build
+
+    - name: Publish Web Admin
+      working-directory: src/SaburaIIS.AdminWeb/
+      run: dotnet publish -c Release --no-build
+
+    - name: Packaging 
+      shell: pwsh
+      run: |
+        Compress-Archive -Path ./src/SaburaIIS.Agent/bin/Release/net5.0/publish/* -DestinationPath SaburaIIS.Agent.zip
+        Compress-Archive -Path ./src/SaburaIIS.AdminWeb/bin/Release/net5.0/publish/* -DestinationPath SaburaIIS.AdminWeb.zip
+
+    - name: Get Upload URL
+      id: geturl
+      shell: bash
+      run: |
+         upload_url=$(curl -sL https://api.github.com/repos/${{github.repository}}/releases/latest?access_token=${{ secrets.GITHUB_TOKEN }} | jq -r '.upload_url')
+         echo ::set-output name=upload_url::$upload_url
+
+    - name: Upload Agent
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.geturl.outputs.upload_url }}
+        asset_path: ./SaburaIIS.Agent.zip
+        asset_name: SaburaIIS.Agent.zip
+        asset_content_type: application/zip
+
+    - name: Upload Web Admin
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.geturl.outputs.upload_url }}
+        asset_path: ./SaburaIIS.AdminWeb.zip
+        asset_name: SaburaIIS.AdminWeb.zip
+        asset_content_type: application/zip
+    
+    - name: Pack CLI
+      working-directory: src/SaburaIIS.CLI/
+      run: dotnet pack -c Release /p:Version=${{github.event.release.tag_name}} 
+
+    - name: Publish CLI to NuGet.org
+      working-directory: src/SaburaIIS.CLI/bin/Release/
+      run: dotnet nuget push *.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_TOKEN }}
