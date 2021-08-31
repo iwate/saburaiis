@@ -17,14 +17,16 @@ namespace SaburaIIS.Tests
                 },
                 new POCO.ApplicationPool
                 {
-                    Name = "B"
+                    Name = "B",
+                    AutoStart = true
                 }
             };
             var remotes = new[] 
             {
                 new POCO.ApplicationPool
                 {
-                    Name = "B"
+                    Name = "B",
+                    AutoStart = false
                 },
                 new POCO.ApplicationPool
                 {
