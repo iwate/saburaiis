@@ -1,4 +1,5 @@
 ﻿using SaburaIIS;
+using SaburaIIS.CLI;
 using SaburaIIS.Json;
 using SaburaIIS.Models;
 using SaburaIIS.Validations;
@@ -56,6 +57,55 @@ var jsonOptions = new JsonSerializerOptions
 jsonOptions.Converters.Add(new JsonStringEnumConverter());
 jsonOptions.Converters.Add(new TimeSpanConverter());
 
+var env = Environment.GetEnvironmentVariables();
+string? envValue(string name) => env.Contains(name) ? (string?)env[name] : null;
+string? fallback(params string?[] values) => values.FirstOrDefault(value => !string.IsNullOrEmpty(value));
+
+var addPartitionCommand = new Command("add-partition", "Createing new partition")
+{
+    new Argument<string>("partition") { 
+        Description = "A name of partition",
+    }
+};
+
+addPartitionCommand.Handler = CommandHandler.Create(async (
+    string partition,
+    string? subscription,
+    string? resourceGroup,
+    string? cosmosdb,
+    string? cosmosdbEndpoint,
+    string? tenantId,
+    string? clientId,
+    string? clientSecret) =>
+{
+    var config = new Config
+    {
+        SubscriptionId    = fallback(subscription,     envValue("AZURE_SUBSCRIPTION_ID")) ?? throw new ArgumentNullException(nameof(subscription)),
+        ResourceGroupName = fallback(resourceGroup,    envValue("SABURAIIS_RG_NAME"))     ?? throw new ArgumentNullException(nameof(resourceGroup)),
+        CosmosDbName      = fallback(cosmosdb,         envValue("SABURAIIS_DB_NAME"))     ?? throw new ArgumentNullException(nameof(cosmosdb)),
+        CosmosDbEndpoint  = fallback(cosmosdbEndpoint, envValue("SABURAIIS_DB_ENDPOINT")),
+        AADTenantId       = fallback(tenantId,         envValue("AZURE_TENANT_ID")),
+        AADClientId       = fallback(clientId,         envValue("AZURE_CLIENT_ID")),
+        AADClientSecret   = fallback(clientSecret,     envValue("AZURE_CLIENT_SECRET")),
+    };
+
+    var store = new Store(config);
+
+    await store.InitAsync();
+
+    var (current, _) = await store.GetPartitionAsync(partition);
+
+    if (current != null)
+    {
+        Console.WriteLine($"{partition} already exists");
+        return;
+    }
+
+    await store.SavePartitionAsync(Defaults.CreatePartition(partition, config), "*");
+});
+
+rootCommand.AddCommand(addPartitionCommand);
+
 var exportCommand = new Command("export", "Exporting partition settings to file.")
 {
     new Argument<string>("partition") { 
@@ -79,10 +129,6 @@ exportCommand.Handler = CommandHandler.Create(async (
     string? clientId,
     string? clientSecret) =>
 {
-    var env = Environment.GetEnvironmentVariables();
-    string? envValue(string name) => env.Contains(name) ? (string?)env[name] : null;
-    string? fallback(params string?[] values) => values.FirstOrDefault(value => !string.IsNullOrEmpty(value));
-
     var config = new Config
     {
         SubscriptionId    = fallback(subscription,     envValue("AZURE_SUBSCRIPTION_ID")) ?? throw new ArgumentNullException(nameof(subscription)),
@@ -106,7 +152,14 @@ exportCommand.Handler = CommandHandler.Create(async (
         return;
     }
 
-    var json = JsonSerializer.Serialize(data, jsonOptions);
+    var json = JsonSerializer.Serialize(new PartitionWithETag 
+    {
+        ETag = etag,
+        Name = data.Name,
+        ApplicationPools = data.ApplicationPools,
+        Sites = data.Sites,
+        ScaleSets = data.ScaleSets
+    }, jsonOptions);
 
     if (output == null)
     {
@@ -144,10 +197,6 @@ importCommand.Handler = CommandHandler.Create(async (
     if (!input.Exists)
         throw new ArgumentException($"{nameof(input.FullName)} is not exists");
 
-    var env = Environment.GetEnvironmentVariables();
-    string? envValue(string name) => env.Contains(name) ? (string?)env[name] : null;
-    string? fallback(params string?[] values) => values.FirstOrDefault(value => !string.IsNullOrEmpty(value));
-
     var config = new Config
     {
         SubscriptionId    = fallback(subscription,     envValue("AZURE_SUBSCRIPTION_ID")) ?? throw new ArgumentNullException(nameof(subscription)),
@@ -163,7 +212,7 @@ importCommand.Handler = CommandHandler.Create(async (
 
     await store.InitAsync();
 
-    var (current, etag) = await store.GetPartitionAsync(partition);
+    var (current, _) = await store.GetPartitionAsync(partition);
 
     if (current == null)
     {
@@ -172,7 +221,7 @@ importCommand.Handler = CommandHandler.Create(async (
     }
 
     var json = await File.ReadAllTextAsync(input.FullName);
-    var @new = JsonSerializer.Deserialize<Partition>(json, jsonOptions);
+    var @new = JsonSerializer.Deserialize<PartitionWithETag>(json, jsonOptions);
 
     if (@new == null)
         throw new ArgumentException($"{input.Name} is invalid partition json file");
@@ -180,7 +229,7 @@ importCommand.Handler = CommandHandler.Create(async (
     if (@new.Name != partition)
         throw new ArgumentException($"{input.Name} is not for {partition}");
 
-    await store.SavePartitionAsync(@new, etag);
+    await store.SavePartitionAsync(@new, @new.ETag);
 });
 
 rootCommand.AddCommand(importCommand);
@@ -223,10 +272,6 @@ releaseCommand.Handler = CommandHandler.Create(async (
 
     if (!Regex.IsMatch(url, RegularExpression.ReleaseUrl))
         throw new ArgumentException($"{nameof(url)} is invalid pattern ({RegularExpression.ReleaseUrl})");
-
-    var env = Environment.GetEnvironmentVariables();
-    string? envValue(string name) => env.Contains(name) ? (string?)env[name] : null;
-    string? fallback(params string?[] values) => values.FirstOrDefault(value => !string.IsNullOrEmpty(value));
 
     var config = new Config
     {
@@ -315,10 +360,6 @@ modifyPathCommand.Handler = CommandHandler.Create(async (
 
     if (partitionData == null)
         throw new ArgumentException($"{path.FullName} is invalid for partition");
-
-    var env = Environment.GetEnvironmentVariables();
-    string? envValue(string name) => env.Contains(name) ? (string?)env[name] : null;
-    string? fallback(params string?[] values) => values.FirstOrDefault(value => !string.IsNullOrEmpty(value));
 
     var config = new Config
     {
