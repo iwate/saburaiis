@@ -11,14 +11,6 @@ namespace SaburaIIS.Tests
     public class TransformTest
     {
         [Fact]
-        public void Json()
-        {
-            using var manager = new ServerManager();
-            var locals = new Mapper().Map<Site, POCO.Site>(manager.Sites).ToList();
-            var json = Helpers.ToJson(locals);
-            Console.WriteLine(json);
-        }
-        [Fact]
         public void AddApplicationPool()
         {
             using var manager = new ServerManager();
