@@ -21,9 +21,12 @@ jobs:
     - name: Restore dependencies
       working-directory: src
       run: dotnet restore
-    - name: Build
+    - name: Build dotnet
       working-directory: src
       run: dotnet build --no-restore
+    - name: Build client app
+      working-directory: src/SaburaIIS.AdminWeb/ClientApp
+      run: npm run build
     - name: Test
       working-directory: src
       run: dotnet test --no-build --verbosity normal
