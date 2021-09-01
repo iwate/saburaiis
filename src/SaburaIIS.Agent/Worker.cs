@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
@@ -22,6 +23,7 @@ namespace SaburaIIS.Agent
         private readonly ILogger<Worker> _logger;
         private readonly Store _store;
         private readonly Storage _storage;
+        private readonly KeyVault _keyVault;
         private readonly Mapper _mapper;
         private readonly string _vmss;
         private ServerManager _manager;
@@ -36,6 +38,7 @@ namespace SaburaIIS.Agent
             _logger = logger;
             _store = new Store(config);
             _storage = new Storage(config);
+            _keyVault = new KeyVault(config);
             _mapper = new Mapper();
             _manager = new ServerManager();
             _watcher = new FileSystemWatcher();
@@ -94,10 +97,12 @@ namespace SaburaIIS.Agent
                     var dAppPools = Delta.CreateCollection(applicationPools, partition.ApplicationPools).ToList();
                     var dSites = Delta.CreateCollection(sites, partition.Sites).ToList();
 
-                    if (dAppPools.Count == 0 || dSites.Count == 0)
+                    if (dAppPools.Count == 0 && dSites.Count == 0)
                         continue;
 
                     _logger.LogInformation("Detect {partition} changes", partition.Name);
+
+                    await DeployCertificates(partition.Sites);
 
                     await DeployPackages(dSites, async () =>
                     {
@@ -240,6 +245,38 @@ namespace SaburaIIS.Agent
                 }
             };
             _watcher.EnableRaisingEvents = true;
+        }
+
+        async Task DeployCertificates(IEnumerable<POCO.Site> sites)
+        {
+            var certs = sites.SelectMany(site =>
+                                site.Bindings
+                                    .Where(binding => binding.CertificateHash != null)
+                                    .Select(binding => (binding.CertificateHash, binding.CertificateStoreName)))
+                            .Distinct()
+                            .GroupBy(cert => cert.CertificateStoreName);
+
+            if (!certs.Any())
+                return;
+
+            var registry = await _keyVault.GetCertificatesAsync();
+            
+            foreach(var group in certs)
+            {
+                using var store = new X509Store(group.Key, StoreLocation.LocalMachine);
+                store.Open(OpenFlags.ReadWrite);
+                var notStoredCerts = group.Where(cert => store.Certificates.Find(X509FindType.FindByThumbprint, Convert.ToHexString(cert.CertificateHash), false).Count == 0);
+                foreach (var cert in notStoredCerts)
+                {
+                    var info = registry.First(o => o.Thumbprint.SequenceEqual(cert.CertificateHash));
+                    var raw = await _keyVault.GetCertificateAsync(info.Name, info.Version);
+                    if (raw != null)
+                    {
+                        store.Add(new X509Certificate2(raw, (string?)null, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet));
+                    }
+                }
+                store.Close();
+            }
         }
 
         async Task DeployPackages(IEnumerable<IDelta> dSites, Func<Task> action)

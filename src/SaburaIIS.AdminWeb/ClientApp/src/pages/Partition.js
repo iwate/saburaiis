@@ -133,8 +133,10 @@ const Partition = () => {
         text: 'Apply',
         iconProps: { iconName: 'Checkmark' },
         onClick: async () => {
-          await replacePartition(local);
-          setOrigin(local);
+          const etag = await replacePartition(local);
+          const data = { ...local, '@etag': etag };
+          setLocal(data)
+          setOrigin(data);
         },
         split: true,
       },

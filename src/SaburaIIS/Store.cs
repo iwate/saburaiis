@@ -82,9 +82,10 @@ namespace SaburaIIS
             _snapshots = snapshotsResponse.Container;
         }
 
-        public virtual async Task SavePartitionAsync(Partition partition, string etag)
+        public virtual async Task<string> SavePartitionAsync(Partition partition, string etag)
         {
-            await _partitions.UpsertItemAsync(partition, new PartitionKey(partition.Name), new ItemRequestOptions { IfMatchEtag = etag });
+            var response = await _partitions.UpsertItemAsync(partition, new PartitionKey(partition.Name), new ItemRequestOptions { IfMatchEtag = etag });
+            return response.Headers.ETag;
         }
 
         public virtual async Task RemovePartitionAsync(Partition partition, string etag)

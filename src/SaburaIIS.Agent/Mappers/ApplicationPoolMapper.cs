@@ -73,6 +73,7 @@ namespace SaburaIIS.Agent.Mappers
                 }
             };
             dst.State = (POCO.ObjectState)(int)src.State;
+            dst.StartMode = (POCO.StartMode)(int)src.StartMode;
             dst.WorkerProcesses = _mapper.Map<WorkerProcess, POCO.WorkerProcess>(src.WorkerProcesses).ToList();
         }
 

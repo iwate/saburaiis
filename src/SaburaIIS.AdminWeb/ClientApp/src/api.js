@@ -22,6 +22,7 @@ export const replacePartition = async (partition) => {
   });
   if (!response.ok)
     throw "fetch error";
+  return response.headers.get('etag');
 }
 
 export const addPartition = async (name) => {
@@ -112,6 +113,12 @@ export const getRelease = async (packageName, versionName) => {
   return await response.json();
 }
 
+export const getCertificates = async () => {
+  const response = await fetch(`/api/certificates`);
+  if (!response.ok)
+    throw "fetch error";
+  return await response.json();
+}
 
 const getErrorMessage = async (response) => {
   if (response.headers.has('Content-Type')

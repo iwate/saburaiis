@@ -1,5 +1,5 @@
 import { CommandBar, DefaultButton, IconButton, Stack, StackItem, TextField } from "@fluentui/react"
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { useHistory, useParams } from "react-router"
 import { useBreadcrumb } from "../shared/Breadcrumb";
@@ -15,8 +15,9 @@ import {
   DefaultValueController,
   PhysicalPathController
  } from "../parts/controllers";
-import { logFilePeriodOptions, logFormatOptions, logonMethodOptions, logTargetW3COptions, objectStateOptions } from "../constants";
+import { certStoreOptions, logFilePeriodOptions, logFormatOptions, logonMethodOptions, logTargetW3COptions, objectStateOptions, protocolOptions } from "../constants";
 import { sameValues } from "../helper";
+import { getCertificates } from "../api";
 
 
 
@@ -26,6 +27,7 @@ export const Site = () => {
   const { removeSite } = usePartitionState(partitionName); 
   const { origin, local, setLocal } = useSiteState(partitionName, siteName);
   const { local: applicationPools } = useApplicationPoolListValue(partitionName);
+  const [certOptions, setCertOptions] = useState([]);
   const hasDiff = !sameValues(origin, local) && origin !== null && origin !== undefined;
 
   const { handleSubmit, control, formState: { isDirty }, reset } = useForm({
@@ -52,6 +54,14 @@ export const Site = () => {
       });
     }
   }, [partitionName, siteName, local])
+
+  useEffect(() => {
+    (async () => {
+      const certs = await getCertificates();
+      const formatter = new Intl.DateTimeFormat('default', { year: 'numeric', month: 'numeric', day: 'numeric' })
+      setCertOptions([{ key: null, text: '' }, ...certs.map(c => ({ key: c.thumbprint, text: `${c.name}(${c.thumbprint}) ${formatter.format(new Date(c.notBefore))} ~ ${formatter.format(new Date(c.expiresOn))}` }))])
+    })()
+  }, [])
 
   useBreadcrumb([
     { text: partitionName, key: `/partitions/${partitionName}`, href: `/partitions/${partitionName}` },
@@ -168,9 +178,10 @@ export const Site = () => {
             onRenderSuffix={() => <IconButton iconProps={{ iconName: 'clear' }} onClick={() => removeBinding(index)}></IconButton>}
             control={control}
           />
-          <TextController
+          <DropdownController
             label={`#${index} Protocol`}
             name={`bindings.${index}.protocol`}
+            options={protocolOptions}
             control={control}
           />
           <TextController
@@ -192,14 +203,16 @@ export const Site = () => {
             name={`bindings.${index}.sslFlags`}
             control={control}
           />
-          <NullableTextController
+          <DropdownController
             label={`#${index} CertificateStoreName`}
             name={`bindings.${index}.certificateStoreName`}
+            options={certStoreOptions}
             control={control}
           />
-          <NullableTextController
+          <DropdownController
             label={`#${index} CertificateHash`}
             name={`bindings.${index}.certificateHash`}
+            options={certOptions}
             control={control}
           />
           <ToggleController

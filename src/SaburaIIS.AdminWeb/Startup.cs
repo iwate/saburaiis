@@ -26,10 +26,15 @@ namespace SaburaIIS.AdminWeb
                 var config = sp.GetRequiredService<IOptions<Config>>().Value;
                 return new Store(config);
             });
+            services.AddSingleton(sp => {
+                var config = sp.GetRequiredService<IOptions<Config>>().Value;
+                return new KeyVault(config);
+            });
 
             services.AddControllersWithViews()
                 .AddJsonOptions(configure => {
                     configure.JsonSerializerOptions.Converters.Add(new TimeSpanConverter());
+                    configure.JsonSerializerOptions.Converters.Add(new BinaryConverter());
                 });
 
             services.AddSpaStaticFiles(configuration =>

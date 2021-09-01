@@ -74,6 +74,13 @@ namespace SaburaIIS.Agent
 
             return null;
         }
+        private static PropertyInfo[] _ignores = new[] { 
+            typeof(POCO.ApplicationPool).GetProperty(nameof(POCO.ApplicationPool.State))!,
+            typeof(POCO.ApplicationPool).GetProperty(nameof(POCO.ApplicationPool.WorkerProcesses))!,
+            typeof(POCO.Site).GetProperty(nameof(POCO.Site.Id))!,
+            typeof(POCO.Site).GetProperty(nameof(POCO.Site.State))!,
+        };
+        private static readonly Type _binaryType = typeof(byte[]);
         public static IDelta Create<T>(T local, T remote)
         {
             var type = typeof(T);
@@ -90,7 +97,7 @@ namespace SaburaIIS.Agent
                 Key = keySekector?.Invoke(local ?? remote)
             };
 
-            foreach (var prop in properties)
+            foreach (var prop in properties.Where(prop => !_ignores.Contains(prop)))
             {
                 var propType = prop.PropertyType;
                 var localValue = local != null ? prop.GetValue(local) : null;
@@ -99,6 +106,17 @@ namespace SaburaIIS.Agent
                 if (propType.IsValueType || propType.IsEnum || propType.FullName == "System.String")
                 {
                     if ((localValue != null || remoteValue != null) && (localValue?.Equals(remoteValue) ?? remote?.Equals(localValue)) == false)
+                        delta.ValueProperties.Add(prop.Name, (remoteValue, localValue));
+                }
+                else if (propType == _binaryType)
+                {
+                    if (localValue == null && remoteValue == null)
+                        continue;
+
+                    if (localValue == null || remoteValue == null)
+                        delta.ValueProperties.Add(prop.Name, (remoteValue, localValue));
+
+                    else if(!Enumerable.SequenceEqual((byte[])localValue, (byte[])remoteValue))
                         delta.ValueProperties.Add(prop.Name, (remoteValue, localValue));
                 }
                 else if (propType.IsClass)

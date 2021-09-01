@@ -56,6 +56,7 @@ var jsonOptions = new JsonSerializerOptions
 };
 jsonOptions.Converters.Add(new JsonStringEnumConverter());
 jsonOptions.Converters.Add(new TimeSpanConverter());
+jsonOptions.Converters.Add(new BinaryConverter());
 
 var env = Environment.GetEnvironmentVariables();
 string? envValue(string name) => env.Contains(name) ? (string?)env[name] : null;

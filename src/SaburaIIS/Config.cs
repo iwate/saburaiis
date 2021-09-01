@@ -6,6 +6,8 @@
         public string ResourceGroupName { get; set; }
         public string CosmosDbName { get; set; }
         public string CosmosDbEndpoint { get; set; }
+        public string KeyVaultName { get; set; }
+        public string KeyVaultEndpoint { get; set; }
         public string AADTenantId { get; set; }
         public string AADClientId { get; set; }
         public string AADClientSecret { get; set; }
@@ -17,5 +19,6 @@
         public string LogLocationDefault { get; set; } = @"%SystemDrive%\inetpub\logs\LogFiles";
 
         public string GetCosmosDbEndpoint() => CosmosDbEndpoint ?? $"https://{CosmosDbName}.documents.azure.com/";
+        public string GetKeyVaultEndpoint() => KeyVaultEndpoint ?? $"https://{KeyVaultName}.vault.azure.net/";
     }
 }

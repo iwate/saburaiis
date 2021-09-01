@@ -55,7 +55,9 @@ namespace SaburaIIS.AdminWeb.Controllers
             if (name != partition.Name)
                 return BadRequest();
 
-            await _store.SavePartitionAsync(partition, etag);
+            var newETag = await _store.SavePartitionAsync(partition, etag);
+
+            Response.Headers.Add("ETag", newETag);
 
             return NoContent();
         }

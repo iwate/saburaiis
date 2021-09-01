@@ -84,3 +84,14 @@ export const logonMethodOptions = [
   { key: 2, text: 'Network' },
   { key: 3, text: 'ClearText' },
 ]
+
+export const protocolOptions = [
+  { key: 'http', text: 'http' },
+  { key: 'https', text: 'https' },
+]
+
+export const certStoreOptions = [
+  { key: null, text: '' },
+  { key: 'My', text: 'My' },
+  { key: 'Root', text: 'Root' },
+]
