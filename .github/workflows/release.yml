@@ -30,16 +30,16 @@ jobs:
 
     - name: Publish Agent
       working-directory: src/SaburaIIS.Agent/
-      run: dotnet publish -c Release --no-build
+      run: dotnet publish -c Release --self-contained --no-build
 
     - name: Publish Web Admin
       working-directory: src/SaburaIIS.AdminWeb/
-      run: dotnet publish -c Release --no-build
+      run: dotnet publish -c Release --self-contained --no-build
 
     - name: Packaging 
       shell: pwsh
       run: |
-        Compress-Archive -Path ./src/SaburaIIS.Agent/bin/Release/net5.0/publish/* -DestinationPath SaburaIIS.Agent.zip
+        Compress-Archive -Path ./src/SaburaIIS.Agent/bin/Release/net5.0/win-x64/publish/* -DestinationPath SaburaIIS.Agent.zip
         Compress-Archive -Path ./src/SaburaIIS.AdminWeb/bin/Release/net5.0/publish/* -DestinationPath SaburaIIS.AdminWeb.zip
 
     - name: Get Upload URL
