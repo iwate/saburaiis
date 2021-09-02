@@ -14,7 +14,7 @@ import {
   DefaultValueController,
   PhysicalPathController
  } from "../parts/controllers";
-import { certStoreOptions, logFilePeriodOptions, logFormatOptions, logonMethodOptions, logTargetW3COptions, objectStateOptions, protocolOptions } from "../constants";
+import { certStoreOptions, logFilePeriodOptions, logFormatOptions, logonMethodOptions, logTargetW3COptions, protocolOptions } from "../constants";
 import { sameValues } from "../helper";
 import { getCertificates } from "../api";
 
