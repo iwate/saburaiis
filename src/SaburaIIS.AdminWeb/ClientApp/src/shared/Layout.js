@@ -26,21 +26,19 @@ const breadcrumbStyle = {
 
 const Layout = ({ children }) => {
   const browserHistory = useHistory();
-  const { origin, local, setOrigin, setLocal } = usePartitionListState();
+  const { local, setOrigin, setLocal } = usePartitionListState();
   const [packagesSummary, setPackagesSummary] = usePackagesSummaryState();
 
   useEffect(() => {
     (async () => {
-      if (origin === null) {
-        const names = await getPartitionNames();
-        const partitions = names.map(name => ({name, hasDiff: false}));
-        setOrigin(partitions)
-        setLocal(partitions)
-      }
+      const names = await getPartitionNames();
+      const partitions = names.map(name => ({name, hasDiff: false}));
+      setOrigin(partitions)
+      setLocal(partitions)
       const summary = await getPackageSummary();
       setPackagesSummary(summary);
     })()
-  }, [])
+  }, [setLocal, setOrigin, setPackagesSummary])
   
   if (local === null) {
     return <div>Loading...</div>

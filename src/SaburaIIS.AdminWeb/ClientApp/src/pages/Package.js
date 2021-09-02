@@ -1,5 +1,5 @@
-﻿import { CommandBar, Nav, Stack } from "@fluentui/react";
-import { useEffect, useState } from "react";
+import { Nav, Stack } from "@fluentui/react";
+import { useEffect } from "react";
 import { Route, Switch, useHistory, useParams, useRouteMatch } from "react-router";
 import { getReleaseVersions } from "../api";
 import { useBreadcrumb } from "../shared/Breadcrumb";
@@ -28,7 +28,7 @@ export const Package = () => {
       const versions = await getReleaseVersions(packageName);
       setReleases(versions);
     })()
-  }, [packageName]);
+  }, [packageName, setReleases]);
 
   useBreadcrumb([
     { text: 'Packages', key: `/packages/` },
@@ -49,15 +49,6 @@ export const Package = () => {
       url: `${url}/releases/${release}`
     })))
   }]
-
-  const commands = [
-    {
-      key: 'new',
-      text: 'New Release',
-      iconProps: { iconName: 'Add' },
-      onClick: () => { },
-    },
-  ];
 
   const onClickLink = (ev, item) => {
     ev.preventDefault();

@@ -1,4 +1,4 @@
-﻿import { Stack } from "@fluentui/react";
+import { Stack } from "@fluentui/react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router"
 import { getRelease } from "../api";

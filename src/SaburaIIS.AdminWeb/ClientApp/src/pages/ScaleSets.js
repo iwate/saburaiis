@@ -29,7 +29,7 @@ export const ScaleSets = () => {
         ...local,
       });
     }
-  }, [partitionName, local])
+  }, [partitionName, local, reset])
 
   useBreadcrumb([
     { text: partitionName, key: `/partitions/${partitionName}`, href: `/partitions/${partitionName}` },

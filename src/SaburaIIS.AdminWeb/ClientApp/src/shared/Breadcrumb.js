@@ -16,7 +16,7 @@ export const useBreadcrumb = (items) => {
     if (url === location.pathname) {
       context.setBreadcrumb(items)
     }
-  }, [location]);
+  }, [location, context, url, items]);
   return [context.breadcrumb, context.setBreadcrumb];
 };
 

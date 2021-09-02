@@ -38,20 +38,18 @@ const Partition = () => {
 
   useEffect(() => {
     (async () => {
-      if (origin === null) {
-        const partition = await getPartition(partitionName);
-        setOrigin(partition);
-        setLocal(partition);
-      }
+      const partition = await getPartition(partitionName);
+      setOrigin(partition);
+      setLocal(partition);
     })()
-  }, [partitionName])
+  }, [partitionName, setOrigin, setLocal])
 
   useEffect(() => {
     setListLocal(list => {
       const index = list.findIndex(item => item.name === partitionName);
       return [...list.slice(0, index), {name:partitionName, hasDiff}, ...list.slice(index+1)];
     })
-  }, [origin, local]);
+  }, [origin, local, hasDiff, partitionName, setListLocal]);
 
   if (local === null) {
     return <div>Loading ...</div>

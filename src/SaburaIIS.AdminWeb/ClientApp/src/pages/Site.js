@@ -10,7 +10,6 @@ import {
   TextController,
   IntegerController,
   FlagController,
-  NullableTextController,
   TimeController,
   DefaultValueController,
   PhysicalPathController
@@ -53,7 +52,7 @@ export const Site = () => {
         ...local,
       });
     }
-  }, [partitionName, siteName, local])
+  }, [partitionName, siteName, local, reset])
 
   useEffect(() => {
     (async () => {
@@ -114,7 +113,10 @@ export const Site = () => {
     <CommandBar items={commands} style={{ borderBottom: '1px solid #eee', paddingBottom: 4 }} />
     <Stack tokens={{ childrenGap: 8, padding: 16 }} style={{ width: '100%', overflowY: 'auto' }}>
       <TextField label="Name" value={local.name} readOnly />
-      <TextField label="State" value={objectStateOptions.find(item => item.key === local.state).text} readOnly />
+      <DefaultValueController
+        name="State"
+        control={control}
+      />
       <ToggleController
         label="Server Auto Start"
         name="serverAutoStart"

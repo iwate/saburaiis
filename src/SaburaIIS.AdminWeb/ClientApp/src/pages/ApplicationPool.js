@@ -59,7 +59,7 @@ export const ApplicationPool = () => {
         }
       });
     }
-  }, [partitionName, apppoolName, local])
+  }, [partitionName, apppoolName, local, reset])
 
   Breadcrumb.useBreadcrumb([
     { text: partitionName, key: `/partitions/${partitionName}`, href: `/partitions/${partitionName}` },

@@ -1,14 +1,14 @@
 export const getPartitionNames = async () => {
   const response = await fetch(`/api/partitions`);
   if (!response.ok)
-    throw "fetch error";
+    throw new Error("fetch error");
   return await response.json(); 
 }
 
 export const getPartition = async (partitionName) => {
   const response = await fetch(`/api/partitions/${partitionName}`);
   if (!response.ok)
-    throw "fetch error";
+    throw new Error("fetch error");
   const data = await response.json();
   data['@etag'] = response.headers.get('etag');
   return data;
@@ -21,7 +21,7 @@ export const replacePartition = async (partition) => {
     body: JSON.stringify(partition)
   });
   if (!response.ok)
-    throw "fetch error";
+    throw new Error("fetch error");
   return response.headers.get('etag');
 }
 
@@ -47,42 +47,42 @@ export const removePartition = async (partition) => {
 export const getInstances = async (partitionName) => {
   const response = await fetch(`/api/partitions/${partitionName}/instances`);
   if (!response.ok)
-    throw "fetch error";
+    throw new Error("fetch error");
   return await response.json();
 }
 
 export const getInstance = async (partitionName, scaleSetName, instanceName) => {
   const response = await fetch(`/api/partitions/${partitionName}/instances/${scaleSetName}/${instanceName}`);
   if (!response.ok)
-    throw "fetch error";
+    throw new Error("fetch error");
   return await response.json();
 }
 
 export const getSnapshots = async (partitionName, scaleSetName, instanceName) => {
   const response = await fetch(`/api/partitions/${partitionName}/instances/${scaleSetName}/${instanceName}/snapshots`);
   if (!response.ok)
-    throw "fetch error";
+    throw new Error("fetch error");
   return await response.json();
 }
 
 export const getSnapshot = async (partitionName, scaleSetName, instanceName, timestamp) => {
   const response = await fetch(`/api/partitions/${partitionName}/instances/${scaleSetName}/${instanceName}/snapshots/${encodeURIComponent(timestamp)}`);
   if (!response.ok)
-    throw "fetch error";
+    throw new Error("fetch error");
   return await response.json();
 }
 
 export const getPackageSummary = async () => {
   const response = await fetch(`/api/packages/`);
   if (!response.ok)
-    throw "fetch error";
+    throw new Error("fetch error");
   return await response.json();
 }
 
 export const getReleaseVersions = async (packageName) => {
   const response = await fetch(`/api/packages/${packageName}/releases`);
   if (!response.ok)
-    throw "fetch error";
+    throw new Error("fetch error");
   return await response.json();
 }
 
@@ -109,14 +109,14 @@ export const addRelease = async (packageName, version, url) => {
 export const getRelease = async (packageName, versionName) => {
   const response = await fetch(`/api/packages/${packageName}/releases/${versionName}`);
   if (!response.ok)
-    throw "fetch error";
+    throw new Error("fetch error");
   return await response.json();
 }
 
 export const getCertificates = async () => {
   const response = await fetch(`/api/certificates`);
   if (!response.ok)
-    throw "fetch error";
+    throw new Error("fetch error");
   return await response.json();
 }
 

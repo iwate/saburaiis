@@ -1,4 +1,4 @@
-﻿import { atom, useRecoilState, useRecoilValue } from "recoil";
+import { atom, useRecoilState, useRecoilValue } from "recoil";
 
 const packagesSummaryState = atom({
   key: 'packagesSummary',

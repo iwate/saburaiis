@@ -1,5 +1,5 @@
 import { DetailsList, Stack, Link, CommandBar, SelectionMode } from "@fluentui/react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Route, Switch, useHistory, useParams, useRouteMatch } from "react-router";
 import { getInstances } from "../api";
 import { objectStateOptions } from "../constants";
@@ -16,7 +16,7 @@ export const Instances = () => {
     { text: 'Instances' },
   ]);
 
-  const loadInstances = async () => {
+  const loadInstances = useCallback(async () => {
     const instances = await getInstances(partitionName);
     setInstances(instances.reduce((a,b) => {
       return a.concat(b.current.sites.reduce((c,d) => {
@@ -36,11 +36,11 @@ export const Instances = () => {
         }, []))
       }, []))
     }, []));
-  }
+  }, [setInstances, partitionName])
 
   useEffect(() => {
     loadInstances();
-  }, [partitionName])
+  }, [partitionName, loadInstances])
 
   const columns = [
     {

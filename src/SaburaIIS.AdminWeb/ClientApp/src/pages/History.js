@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useBreadcrumb } from '../shared/Breadcrumb';
 import { getInstance, getSnapshots, getSnapshot } from '../api'
@@ -26,20 +26,19 @@ export const History = () => {
     })()
   }, [partitionName, scaleSetName, instanceName])
 
-  const getDetail = async (item) => {
-    const value = (item.timestamp === instance?.current.timestamp) ? instance?.current
-                : await getSnapshot(partitionName, scaleSetName, instanceName, item.timestamp);
-
-    return { label: item.text, value };
-  }
-
   useEffect(() => {
     (async () => {
+      const getDetail = async (item) => {
+        const value = (item.timestamp === instance?.current.timestamp) ? instance?.current
+                    : await getSnapshot(partitionName, scaleSetName, instanceName, item.timestamp);
+    
+        return { label: item.text, value };
+      }
       const [r, l] = selected;
       setLeft(l ? await getDetail(l) : null);
       setRight(r ? await getDetail(r) : null);
     })()
-  }, [selected])
+  }, [selected, instance, partitionName, scaleSetName,instanceName])
 
   const detailList = useMemo(() => {
     const columns = [
