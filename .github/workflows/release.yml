@@ -46,7 +46,7 @@ jobs:
       id: geturl
       shell: bash
       run: |
-         upload_url=$(curl -sL https://api.github.com/repos/${{github.repository}}/releases/latest -H 'Authorization: token ${{ secrets.GITHUB_TOKEN }}' | jq -r '.[] | select(.tag_name == "${{github.event.release.tag_name}}") | .upload_url')
+         upload_url=$(curl -sL https://api.github.com/repos/${{github.repository}}/releases -H 'Authorization: token ${{ secrets.GITHUB_TOKEN }}' | jq -r '.[] | select(.tag_name == "${{github.event.release.tag_name}}") | .upload_url')
          echo ::set-output name=upload_url::$upload_url
 
     - name: Upload Agent
