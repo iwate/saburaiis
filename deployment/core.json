@@ -1,0 +1,260 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.4.613.9944",
+      "templateHash": "14146600129315101975"
+    }
+  },
+  "parameters": {
+    "name": {
+      "type": "string"
+    },
+    "principalId": {
+      "type": "string"
+    },
+    "cosmosdbEnableFreeTier": {
+      "type": "bool",
+      "defaultValue": true
+    }
+  },
+  "functions": [],
+  "resources": [
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts",
+      "apiVersion": "2021-06-15",
+      "name": "[parameters('name')]",
+      "kind": "GlobalDocumentDB",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "enableFreeTier": "[parameters('cosmosdbEnableFreeTier')]",
+        "databaseAccountOfferType": "Standard",
+        "locations": [
+          {
+            "locationName": "[resourceGroup().location]"
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
+      "apiVersion": "2021-06-15",
+      "name": "[format('{0}/saburaiis', parameters('name'))]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "resource": {
+          "id": "saburaiis"
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('name'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+      "apiVersion": "2021-06-15",
+      "name": "[format('{0}/saburaiis/partitions', parameters('name'))]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "resource": {
+          "id": "partitions",
+          "partitionKey": {
+            "paths": [
+              "/Name"
+            ]
+          },
+          "indexingPolicy": {
+            "includedPaths": [
+              {
+                "path": "/"
+              }
+            ],
+            "excludedPaths": [
+              {
+                "path": "/ApplicationPools/*"
+              },
+              {
+                "path": "/Sites/*"
+              }
+            ]
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('name'))]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', split(format('{0}/saburaiis', parameters('name')), '/')[0], split(format('{0}/saburaiis', parameters('name')), '/')[1])]"
+      ]
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+      "apiVersion": "2021-06-15",
+      "name": "[format('{0}/saburaiis/snapshots', parameters('name'))]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "resource": {
+          "id": "snapshots",
+          "partitionKey": {
+            "paths": [
+              "/Name"
+            ]
+          },
+          "indexingPolicy": {
+            "includedPaths": [
+              {
+                "path": "/"
+              }
+            ],
+            "excludedPaths": [
+              {
+                "path": "/ApplicationPools/*"
+              },
+              {
+                "path": "/Sites/*"
+              }
+            ]
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('name'))]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', split(format('{0}/saburaiis', parameters('name')), '/')[0], split(format('{0}/saburaiis', parameters('name')), '/')[1])]"
+      ]
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+      "apiVersion": "2021-06-15",
+      "name": "[format('{0}/saburaiis/packages', parameters('name'))]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "resource": {
+          "id": "packages",
+          "partitionKey": {
+            "paths": [
+              "/Name"
+            ]
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('name'))]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', split(format('{0}/saburaiis', parameters('name')), '/')[0], split(format('{0}/saburaiis', parameters('name')), '/')[1])]"
+      ]
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+      "apiVersion": "2021-06-15",
+      "name": "[format('{0}/saburaiis/instances', parameters('name'))]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "resource": {
+          "id": "instances",
+          "partitionKey": {
+            "paths": [
+              "/ScaleSetName"
+            ]
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('name'))]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', split(format('{0}/saburaiis', parameters('name')), '/')[0], split(format('{0}/saburaiis', parameters('name')), '/')[1])]"
+      ]
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments",
+      "apiVersion": "2021-06-15",
+      "name": "[format('{0}/{1}', parameters('name'), guid('00000000-0000-0000-0000-000000000002', parameters('principalId'), resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('name'))))]",
+      "properties": {
+        "scope": "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('name'))]",
+        "principalId": "[parameters('principalId')]",
+        "roleDefinitionId": "[format('/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.DocumentDB/databaseAccounts/{2}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002', subscription().subscriptionId, resourceGroup().name, parameters('name'))]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('name'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "apiVersion": "2021-04-01-preview",
+      "name": "[parameters('name')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "sku": {
+          "family": "A",
+          "name": "standard"
+        },
+        "tenantId": "[subscription().tenantId]",
+        "accessPolicies": [],
+        "enabledForDeployment": true,
+        "enabledForDiskEncryption": false,
+        "enabledForTemplateDeployment": false,
+        "enableSoftDelete": true,
+        "softDeleteRetentionInDays": 90,
+        "enableRbacAuthorization": true
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2020-08-01-preview",
+      "scope": "[format('Microsoft.KeyVault/vaults/{0}', parameters('name'))]",
+      "name": "[guid('21090545-7ca7-4776-b22c-e363652d74d2', parameters('principalId'), resourceId('Microsoft.KeyVault/vaults', parameters('name')))]",
+      "properties": {
+        "principalId": "[parameters('principalId')]",
+        "principalType": "ServicePrincipal",
+        "roleDefinitionId": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/21090545-7ca7-4776-b22c-e363652d74d2', subscription().subscriptionId)]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', parameters('name'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2020-08-01-preview",
+      "scope": "[format('Microsoft.KeyVault/vaults/{0}', parameters('name'))]",
+      "name": "[guid('4633458b-17de-408a-b874-0445c86b69e6', parameters('principalId'), resourceId('Microsoft.KeyVault/vaults', parameters('name')))]",
+      "properties": {
+        "principalId": "[parameters('principalId')]",
+        "principalType": "ServicePrincipal",
+        "roleDefinitionId": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/4633458b-17de-408a-b874-0445c86b69e6', subscription().subscriptionId)]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', parameters('name'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2021-04-01",
+      "name": "[parameters('name')]",
+      "location": "[resourceGroup().location]",
+      "kind": "StorageV2",
+      "sku": {
+        "name": "Standard_ZRS"
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2021-04-01",
+      "name": "[format('{0}/default/packages', parameters('name'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('name'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2020-08-01-preview",
+      "scope": "[format('Microsoft.KeyVault/vaults/{0}', parameters('name'))]",
+      "name": "[guid('ba92f5b4-2d11-453d-a403-e96b0029c9fe', parameters('principalId'), resourceId('Microsoft.KeyVault/vaults', parameters('name')))]",
+      "properties": {
+        "principalId": "[parameters('principalId')]",
+        "principalType": "ServicePrincipal",
+        "roleDefinitionId": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe', subscription().subscriptionId)]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', parameters('name'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('name'))]"
+      ]
+    }
+  ]
+}
