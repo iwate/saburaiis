@@ -1,0 +1,1 @@
+powershell Add-WindowsFeature Web-Server

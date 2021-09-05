@@ -1,4 +1,9 @@
 param (
+    [Parameter(ParameterSetName = "ManagedIdentity",  Mandatory=$false, HelpMessage = "Enter SaburaIIS release version.")]
+    [Parameter(ParameterSetName = "ServicePrincipal",  Mandatory=$false, HelpMessage = "Enter SaburaIIS release version.")]
+    [string] 
+    $Version = "latest"
+    
     [Parameter(ParameterSetName = "ManagedIdentity",  Mandatory=$true, HelpMessage = "Enter the name of the ScaleSet to which it belong.")]
     [Parameter(ParameterSetName = "ServicePrincipal", Mandatory=$true, HelpMessage = "Enter the name of the ScaleSet to which it belong.")]
     [string] 
@@ -35,11 +40,6 @@ param (
     [Parameter(ParameterSetName = "ServicePrincipal", Mandatory=$false, HelpMessage = "Enter client secret of service principal.")]
     [string] 
     $AADClientSecret
-
-    [Parameter(ParameterSetName = "ManagedIdentity",  Mandatory=$false, HelpMessage = "Enter SaburaIIS release version.")]
-    [Parameter(ParameterSetName = "ServicePrincipal",  Mandatory=$false, HelpMessage = "Enter SaburaIIS release version.")]
-    [string] 
-    $Version = "latest"
 )
 
 $ErrorActionPreference = 'Stop'
