@@ -47,10 +47,13 @@ resource containerPartitions 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases
       indexingPolicy: {
         includedPaths: [
           {
-            path: '/'
+            path: '/*'
           }
         ]
         excludedPaths: [
+          {
+            path: '/"_etag"/?'
+          }
           {
             path: '/ApplicationPools/*'
           }
@@ -80,10 +83,13 @@ resource containerSnapshots 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/
       indexingPolicy: {
         includedPaths: [
           {
-            path: '/'
+            path: '/*'
           }
         ]
         excludedPaths: [
+          {
+            path: '/"_etag"/?'
+          }
           {
             path: '/ApplicationPools/*'
           }
@@ -110,6 +116,18 @@ resource containerPackages 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/c
           '/Name'
         ]
       }
+      indexingPolicy: {
+        includedPaths: [
+          {
+            path: '/*'
+          }
+        ]
+        excludedPaths: [
+          {
+            path: '/"_etag"/?'
+          }
+        ]
+      }
     }
   }
   dependsOn:[
@@ -126,6 +144,18 @@ resource containerInstances 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/
       partitionKey: {
         paths: [
           '/ScaleSetName'
+        ]
+      }
+      indexingPolicy: {
+        includedPaths: [
+          {
+            path: '/*'
+          }
+        ]
+        excludedPaths: [
+          {
+            path: '/"_etag"/?'
+          }
         ]
       }
     }

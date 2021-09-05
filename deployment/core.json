@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "14146600129315101975"
+      "templateHash": "13848761936132853988"
     }
   },
   "parameters": {
@@ -68,10 +68,13 @@
           "indexingPolicy": {
             "includedPaths": [
               {
-                "path": "/"
+                "path": "/*"
               }
             ],
             "excludedPaths": [
+              {
+                "path": "/\"_etag\"/?"
+              },
               {
                 "path": "/ApplicationPools/*"
               },
@@ -103,10 +106,13 @@
           "indexingPolicy": {
             "includedPaths": [
               {
-                "path": "/"
+                "path": "/*"
               }
             ],
             "excludedPaths": [
+              {
+                "path": "/\"_etag\"/?"
+              },
               {
                 "path": "/ApplicationPools/*"
               },
@@ -134,6 +140,18 @@
             "paths": [
               "/Name"
             ]
+          },
+          "indexingPolicy": {
+            "includedPaths": [
+              {
+                "path": "/*"
+              }
+            ],
+            "excludedPaths": [
+              {
+                "path": "/\"_etag\"/?"
+              }
+            ]
           }
         }
       },
@@ -153,6 +171,18 @@
           "partitionKey": {
             "paths": [
               "/ScaleSetName"
+            ]
+          },
+          "indexingPolicy": {
+            "includedPaths": [
+              {
+                "path": "/*"
+              }
+            ],
+            "excludedPaths": [
+              {
+                "path": "/\"_etag\"/?"
+              }
             ]
           }
         }
