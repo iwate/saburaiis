@@ -3,7 +3,7 @@ param (
     [Parameter(ParameterSetName = "ServicePrincipal",  Mandatory=$false, HelpMessage = "Enter SaburaIIS release version.")]
     [string] 
     $Version = "latest"
-    
+
     [Parameter(ParameterSetName = "ManagedIdentity",  Mandatory=$true, HelpMessage = "Enter the name of the ScaleSet to which it belong.")]
     [Parameter(ParameterSetName = "ServicePrincipal", Mandatory=$true, HelpMessage = "Enter the name of the ScaleSet to which it belong.")]
     [string] 
@@ -62,7 +62,7 @@ $ResourceArguments = "--SaburaIIS:SubscriptionId=$SubscriptionId --SaburaIIS:Res
 $ServicePrincipalArguments = "--SaburaIIS:AADTenantId=$AADTenantId --SaburaIIS:AADClientId=$AADClientId --SaburaIIS:AADClientSecret=$AADClientSecret"
 $Arguments = "--SaburaIIS:ScaleSetName=$ScaleSetName $ResourceArguments $ServicePrincipalArguments"
 
-sc.exe create "SaburaIIS" binpath="$env:SystemDrive\saburaiis\SaburaIIS.Agent.exe $Arguments $LogLevel"
+sc.exe create "SaburaIIS" binpath="$env:SystemDrive\saburaiis\SaburaIIS.Agent.exe $Arguments $LogLevel" start=auto
 
 # Start service
 sc.exe start "SaburaIIS"
