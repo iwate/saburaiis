@@ -1,7 +1,8 @@
-import { CommandBar, IconButton, Stack, TextField } from "@fluentui/react"
-import { useEffect, useState } from "react";
+import { CommandBar, DefaultButton, IconButton, Stack, StackItem, TextField } from "@fluentui/react"
+import { useEffect } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { useHistory, useParams } from "react-router"
+import { TextController } from "../parts/controllers";
 import { useBreadcrumb } from "../shared/Breadcrumb";
 import { useScaleSetsState } from "../state";
 
@@ -21,8 +22,6 @@ export const ScaleSets = () => {
     keyName: 'name'
   });
 
-  const [value, setValue] = useState('');
-
   useEffect(() => {
     if (local !== null) {
       reset({
@@ -41,7 +40,6 @@ export const ScaleSets = () => {
   }
 
   const onSubmit = (data) => {
-    console.log(data)
     setLocal(data);
     browserHistory.push(`/partitions/${partitionName}`);
   }
@@ -60,30 +58,21 @@ export const ScaleSets = () => {
     <CommandBar items={commands} style={{ borderBottom: '1px solid #eee', paddingBottom: 4 }} />
     <Stack tokens={{ childrenGap: 8, padding: 16 }} style={{ width: '100%', overflowY: 'auto' }}>
       {scaleSets.map((item, index) =>
-
-        <TextField
+        <TextController
           key={item.name}
+          name={`scaleSets.${index}.name`}
           value={item.name}
           onRenderSuffix={() =>
             <IconButton
               iconProps={{ iconName: 'clear' }}
               onClick={() => removeScaleSet(index)}
             />}
-          readOnly />
+          readOnly
+          control={control} />
       )}
-      <TextField
-        value={value}
-        onChange={(ev,newValue) => setValue(newValue)}
-        onKeyUp={(ev) => {
-          if (ev.key === 'Enter' || ev.keyCode === 13) {
-            appendScaleSet({ name: value});
-            setValue('');
-          }
-        }}
-        onRenderSuffix={() => <IconButton iconProps={{ iconName: 'Add' }} onClick={() => {
-          appendScaleSet({ name: value});
-          setValue('');
-        }}/>} />
+      <StackItem>
+        <DefaultButton iconProps={{ iconName: 'Add' }} onClick={() => appendScaleSet({ name: '' })}>Add Scale Set</DefaultButton>
+      </StackItem>
     </Stack>
   </Stack>
 }
