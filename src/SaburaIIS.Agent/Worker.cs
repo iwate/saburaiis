@@ -49,14 +49,18 @@ namespace SaburaIIS.Agent
         {
             Partition? partition = null;
 
-            try
+            while(true)
             {
-                await _store.InitAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while initializing store.");
-                return;
+                try
+                {
+                    await _store.InitAsync();
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "An error occurred while initializing store.");
+                    await Task.Delay(TimeSpan.FromSeconds(60));
+                }
             }
 
             try
