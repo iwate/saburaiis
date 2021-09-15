@@ -24,15 +24,30 @@ rootCommand.AddGlobalOption(new Option<string?>("--resource-group")
     Description = "Resource Group name (fallback to SABURAIIS_RG_NAME environment variable)",
     IsRequired = false
 });
-rootCommand.AddGlobalOption(new Option<string?>("--cosmosdb")
+rootCommand.AddGlobalOption(new Option<string?>("--cosmosdb-name")
 { 
-    Description= "CosmosDB name (fallback to SABURAIIS_DB_NAME environment variable)",
+    Description= "CosmosDB name (fallback to SABURAIIS_DB_NAME or SABURAIIS_RG_NAME environment variable)",
     IsRequired = false
 });
 rootCommand.AddGlobalOption(new Option<string?>("--cosmosdb-endpoint") 
 {
-    Description = "CosmosDB endpoint (fallback to SABURAIIS_DB_ENDPOINT environment variable)",
+    Description = "CosmosDB endpoint (fallback to SABURAIIS_DB_ENDPOINT environment variable or 'https://{--cosmosdb-name}.documents.azure.com/')",
     IsRequired = false 
+});
+rootCommand.AddGlobalOption(new Option<string?>("--storage-name")
+{
+    Description = "Storage Account name (fallback to SABURAIIS_STORAGE_NAME or SABURAIIS_RG_NAME environment variable)",
+    IsRequired = false
+});
+rootCommand.AddGlobalOption(new Option<string?>("--storage-container-name", getDefaultValue: () => "packages")
+{
+    Description = "Storage Blob Container name (fallback to SABURAIIS_STORAGE_CONTAINER_NAME environment variable)",
+    IsRequired = false,
+});
+rootCommand.AddGlobalOption(new Option<string?>("--storage-container-endpoint")
+{
+    Description = "Storage Blob Container endpoint (fallback to SABURAIIS_STORAGE_CONTAINER_ENDPOINT environment variable or 'https://{--storage-name}.blob.core.windows.net/{--storage-container-name}/')",
+    IsRequired = false
 });
 rootCommand.AddGlobalOption(new Option<string?>("--tenant-id") 
 {
@@ -73,7 +88,7 @@ addPartitionCommand.Handler = CommandHandler.Create(async (
     string partition,
     string? subscription,
     string? resourceGroup,
-    string? cosmosdb,
+    string? cosmosdbName,
     string? cosmosdbEndpoint,
     string? tenantId,
     string? clientId,
@@ -83,7 +98,7 @@ addPartitionCommand.Handler = CommandHandler.Create(async (
     {
         SubscriptionId    = fallback(subscription,     envValue("AZURE_SUBSCRIPTION_ID")) ?? throw new ArgumentNullException(nameof(subscription)),
         ResourceGroupName = fallback(resourceGroup,    envValue("SABURAIIS_RG_NAME"))     ?? throw new ArgumentNullException(nameof(resourceGroup)),
-        CosmosDbName      = fallback(cosmosdb,         envValue("SABURAIIS_DB_NAME"))     ?? throw new ArgumentNullException(nameof(cosmosdb)),
+        CosmosDbName      = fallback(cosmosdbName,     envValue("SABURAIIS_DB_NAME")),
         CosmosDbEndpoint  = fallback(cosmosdbEndpoint, envValue("SABURAIIS_DB_ENDPOINT")),
         AADTenantId       = fallback(tenantId,         envValue("AZURE_TENANT_ID")),
         AADClientId       = fallback(clientId,         envValue("AZURE_CLIENT_ID")),
@@ -124,7 +139,7 @@ exportCommand.Handler = CommandHandler.Create(async (
     FileInfo output,
     string? subscription,
     string? resourceGroup,
-    string? cosmosdb,
+    string? cosmosdbName,
     string? cosmosdbEndpoint,
     string? tenantId,
     string? clientId,
@@ -134,7 +149,7 @@ exportCommand.Handler = CommandHandler.Create(async (
     {
         SubscriptionId    = fallback(subscription,     envValue("AZURE_SUBSCRIPTION_ID")) ?? throw new ArgumentNullException(nameof(subscription)),
         ResourceGroupName = fallback(resourceGroup,    envValue("SABURAIIS_RG_NAME"))     ?? throw new ArgumentNullException(nameof(resourceGroup)),
-        CosmosDbName      = fallback(cosmosdb,         envValue("SABURAIIS_DB_NAME"))     ?? throw new ArgumentNullException(nameof(cosmosdb)),
+        CosmosDbName      = fallback(cosmosdbName,     envValue("SABURAIIS_DB_NAME")),
         CosmosDbEndpoint  = fallback(cosmosdbEndpoint, envValue("SABURAIIS_DB_ENDPOINT")),
         AADTenantId       = fallback(tenantId,         envValue("AZURE_TENANT_ID")),
         AADClientId       = fallback(clientId,         envValue("AZURE_CLIENT_ID")),
@@ -189,7 +204,7 @@ importCommand.Handler = CommandHandler.Create(async (
     FileInfo input,
     string? subscription,
     string? resourceGroup,
-    string? cosmosdb,
+    string? cosmosdbName,
     string? cosmosdbEndpoint,
     string? tenantId,
     string? clientId,
@@ -202,7 +217,7 @@ importCommand.Handler = CommandHandler.Create(async (
     {
         SubscriptionId    = fallback(subscription,     envValue("AZURE_SUBSCRIPTION_ID")) ?? throw new ArgumentNullException(nameof(subscription)),
         ResourceGroupName = fallback(resourceGroup,    envValue("SABURAIIS_RG_NAME"))     ?? throw new ArgumentNullException(nameof(resourceGroup)),
-        CosmosDbName      = fallback(cosmosdb,         envValue("SABURAIIS_DB_NAME"))     ?? throw new ArgumentNullException(nameof(cosmosdb)),
+        CosmosDbName      = fallback(cosmosdbName,     envValue("SABURAIIS_DB_NAME")),
         CosmosDbEndpoint  = fallback(cosmosdbEndpoint, envValue("SABURAIIS_DB_ENDPOINT")),
         AADTenantId       = fallback(tenantId,         envValue("AZURE_TENANT_ID")),
         AADClientId       = fallback(clientId,         envValue("AZURE_CLIENT_ID")),
@@ -243,10 +258,10 @@ var releaseCommand = new Command("release", "Releasing new package version.")
     new Argument<string>("version") { 
         Description =  "A version of release",
     },
-    new Argument<string?>("url") {
+    new Option<string?>("--url") {
         Description =  "A zip url of release",
     },
-    new Option<FileInfo>("zip") {
+    new Option<FileInfo>("--zip") {
         Description =  "A zip path of release",
         IsRequired = false
     },
@@ -255,12 +270,15 @@ var releaseCommand = new Command("release", "Releasing new package version.")
 releaseCommand.Handler = CommandHandler.Create(async (
     string package,
     string version,
-    string url,
-    FileInfo zip,
+    string? url,
+    FileInfo? zip,
     string? subscription,
     string? resourceGroup,
-    string? cosmosdb,
+    string? cosmosdbName,
     string? cosmosdbEndpoint,
+    string? storageName,
+    string? storageContainerName,
+    string? storageContainerEndpoint,
     string? tenantId,
     string? clientId,
     string? clientSecret) =>
@@ -271,18 +289,18 @@ releaseCommand.Handler = CommandHandler.Create(async (
     if (!Regex.IsMatch(version, RegularExpression.ReleaseVersion))
         throw new ArgumentException($"{nameof(version)} is invalid pattern ({RegularExpression.ReleaseVersion})");
 
-    if (!Regex.IsMatch(url, RegularExpression.ReleaseUrl))
-        throw new ArgumentException($"{nameof(url)} is invalid pattern ({RegularExpression.ReleaseUrl})");
-
     var config = new Config
     {
-        SubscriptionId    = fallback(subscription,     envValue("AZURE_SUBSCRIPTION_ID")) ?? throw new ArgumentNullException(nameof(subscription)),
-        ResourceGroupName = fallback(resourceGroup,    envValue("SABURAIIS_RG_NAME"))     ?? throw new ArgumentNullException(nameof(resourceGroup)),
-        CosmosDbName      = fallback(cosmosdb,         envValue("SABURAIIS_DB_NAME"))     ?? throw new ArgumentNullException(nameof(cosmosdb)),
-        CosmosDbEndpoint  = fallback(cosmosdbEndpoint, envValue("SABURAIIS_DB_ENDPOINT")),
-        AADTenantId       = fallback(tenantId,         envValue("AZURE_TENANT_ID")),
-        AADClientId       = fallback(clientId,         envValue("AZURE_CLIENT_ID")),
-        AADClientSecret   = fallback(clientSecret,     envValue("AZURE_CLIENT_SECRET")),
+        SubscriptionId        = fallback(subscription,             envValue("AZURE_SUBSCRIPTION_ID")) ?? throw new ArgumentNullException(nameof(subscription)),
+        ResourceGroupName     = fallback(resourceGroup,            envValue("SABURAIIS_RG_NAME"))     ?? throw new ArgumentNullException(nameof(resourceGroup)),
+        CosmosDbName          = fallback(cosmosdbName,             envValue("SABURAIIS_DB_NAME")),
+        CosmosDbEndpoint      = fallback(cosmosdbEndpoint,         envValue("SABURAIIS_DB_ENDPOINT")),
+        StorageAccountName    = fallback(storageName,              envValue("SABURAIIS_STORAGE_NAME")),
+        BlobContainerName     = fallback(storageContainerName,     envValue("SABURAIIS_STORAGE_CONTAINER_NAME")),
+        BlobContainerEndpoint = fallback(storageContainerEndpoint, envValue("SABURAIIS_STORAGE_ENDPOINT")),
+        AADTenantId           = fallback(tenantId,                 envValue("AZURE_TENANT_ID")),
+        AADClientId           = fallback(clientId,                 envValue("AZURE_CLIENT_ID")),
+        AADClientSecret       = fallback(clientSecret,             envValue("AZURE_CLIENT_SECRET")),
     };
 
     var store = new Store(config);
@@ -291,17 +309,30 @@ releaseCommand.Handler = CommandHandler.Create(async (
 
     var (packageData, etag) = await store.GetPackageAsync(package);
 
-    if (packageData == null) {
+    if (packageData == null)
+    {
         packageData = new Package { Name = package };
         await store.SavePackageAsync(packageData, etag);
     }
 
-    if (zip.Exists)
+    if (packageData.Releases.Any(r => r.Version == version))
+        throw new ArgumentException($"the release version is exist.");
+
+    if (string.IsNullOrEmpty(url) && zip?.Exists != true)
+        throw new ArgumentException($"--url or --zip option is needed");
+
+    if (string.IsNullOrEmpty(url))
+        url = new Uri(new Uri(config.GetBlobContainerEndpoint()), $"{package.ToLower()}/{version.ToLower()}.zip").AbsoluteUri;
+
+    if (!Regex.IsMatch(url, RegularExpression.ReleaseUrl))
+        throw new ArgumentException($"{nameof(url)} is invalid pattern ({RegularExpression.ReleaseUrl})");
+
+    if (zip?.Exists == true)
     {
         var storage = new Storage(config);
         await storage.UploadAsync(url, zip.FullName);
     }
-
+    
     packageData.Releases.Add(new Release
     {
         Version = version,
@@ -347,7 +378,7 @@ modifyPathCommand.Handler = CommandHandler.Create(async (
     string  location,
     string? subscription,
     string? resourceGroup,
-    string? cosmosdb,
+    string? cosmosdbName,
     string? cosmosdbEndpoint,
     string? tenantId,
     string? clientId,
@@ -366,7 +397,7 @@ modifyPathCommand.Handler = CommandHandler.Create(async (
     {
         SubscriptionId    = fallback(subscription,     envValue("AZURE_SUBSCRIPTION_ID")) ?? throw new ArgumentNullException(nameof(subscription)),
         ResourceGroupName = fallback(resourceGroup,    envValue("SABURAIIS_RG_NAME"))     ?? throw new ArgumentNullException(nameof(resourceGroup)),
-        CosmosDbName      = fallback(cosmosdb,         envValue("SABURAIIS_DB_NAME"))     ?? throw new ArgumentNullException(nameof(cosmosdb)),
+        CosmosDbName      = fallback(cosmosdbName,     envValue("SABURAIIS_DB_NAME")),
         CosmosDbEndpoint  = fallback(cosmosdbEndpoint, envValue("SABURAIIS_DB_ENDPOINT")),
         AADTenantId       = fallback(tenantId,         envValue("AZURE_TENANT_ID")),
         AADClientId       = fallback(clientId,         envValue("AZURE_CLIENT_ID")),
