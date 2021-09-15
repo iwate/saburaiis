@@ -2,7 +2,7 @@ param (
     [Parameter(ParameterSetName = "ManagedIdentity",  Mandatory=$false, HelpMessage = "Enter SaburaIIS release version.")]
     [Parameter(ParameterSetName = "ServicePrincipal",  Mandatory=$false, HelpMessage = "Enter SaburaIIS release version.")]
     [string] 
-    $Version = "latest"
+    $Version = "latest",
 
     [Parameter(ParameterSetName = "ManagedIdentity",  Mandatory=$true, HelpMessage = "Enter the name of the ScaleSet to which it belong.")]
     [Parameter(ParameterSetName = "ServicePrincipal", Mandatory=$true, HelpMessage = "Enter the name of the ScaleSet to which it belong.")]
