@@ -143,8 +143,15 @@ namespace SaburaIIS
 
         public virtual async Task<(Package, string)> GetPackageAsync(string name)
         {
-            var response = await _packages.ReadItemAsync<Package>(name, new PartitionKey(name));
-            return (response.Resource, response.ETag);
+            try
+            {
+                var response = await _packages.ReadItemAsync<Package>(name, new PartitionKey(name));
+                return (response.Resource, response.ETag);
+            }
+            catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return (null, null);
+            }
         }
 
         public virtual async Task<IEnumerable<string>> GetReleaseVersionsAsync(string packageName)
