@@ -1,1 +1,1 @@
-powershell Add-WindowsFeature Web-Server
+echo "Custom"

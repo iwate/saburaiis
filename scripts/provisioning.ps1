@@ -44,6 +44,12 @@ param (
 
 $ErrorActionPreference = 'Stop'
 
+# Install windows features
+
+Install-WindowsFeature -Name Web-Server -IncludeManagementTools
+
+"SaburaIIS" | Out-File -FilePath c:\inetpub\wwwroot\saburaiis.txt
+
 # Resolve download link
 $DownloadLink = "https://github.com/iwate/saburaiis/releases/latest/download/SaburaIIS.Agent.zip"
 
