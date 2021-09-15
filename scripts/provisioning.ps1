@@ -40,7 +40,9 @@ param (
     [Parameter(ParameterSetName = "ManagedIdentity",  Mandatory=$false, HelpMessage = "Enter SaburaIIS release version.")]
     [Parameter(ParameterSetName = "ServicePrincipal",  Mandatory=$false, HelpMessage = "Enter SaburaIIS release version.")]
     [string] 
-    $Version = "latest"
+    $Version = "latest",
+
+    $LocationRoot = "c:\inetpub\sites"
 )
 
 $ErrorActionPreference = 'Stop'
@@ -49,7 +51,17 @@ $ErrorActionPreference = 'Stop'
 
 Install-WindowsFeature -Name Web-Server -IncludeManagementTools
 
-"SaburaIIS" | Out-File -FilePath c:\inetpub\wwwroot\saburaiis.txt
+# Setup location root directory
+if (-not Test-Path -Path $LocationRoot) {
+    New-Item -ItemType Directory -Path $LocationRoot
+}
+
+$Acl = Get-ACL -Path $LocationRoot
+if (($Acl.GetAccessRules($true, $true, [System.Security.Principal.NTAccount]) | ?{ $_.IdentityReference -eq "BUILTIN\IIS_IUSRS" } | measure).Count -eq 0) {
+    $AccessRule = New-Object System.Security.AccessControl.FileSystemAccessRule("IIS_IUSRS", "FullControl", "ContainerInherit,ObjectInherit", "None", "Allow")
+    $Acl.AddAccessRule($AccessRule)
+    Set-ACL -Path $LocationRoot -ACLObject $Acl
+}
 
 # Resolve download link
 $DownloadLink = "https://github.com/iwate/saburaiis/releases/latest/download/SaburaIIS.Agent.zip"
