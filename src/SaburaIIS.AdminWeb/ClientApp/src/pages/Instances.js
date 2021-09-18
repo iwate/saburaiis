@@ -60,7 +60,7 @@ export const Instances = () => {
       onRender: item => (
         <Link
           key={`${item.scaleSetName}-${item.instanceName}`}
-          onClick={() => browserHistory.push(`${url}${item.scaleSetName}-${item.instanceName}`)}>
+          onClick={() => browserHistory.push(`${url}${item.scaleSetName}/${item.instanceName}`)}>
           {item.instanceName}
         </Link>
       )
@@ -143,7 +143,7 @@ export const Instances = () => {
           />
         </Stack>
       </Route>
-      <Route path={`${path}:scaleSetName-:instanceName`} component={History} />
+      <Route path={`${path}:scaleSetName/:instanceName`} component={History} />
     </Switch>
   </Stack>
 }
