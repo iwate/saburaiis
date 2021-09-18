@@ -11,18 +11,31 @@ namespace SaburaIIS.Agent.Transformers
 
             if (delta.Method == DeltaMethod.Add)
             {
-                var app = colleciton.Add((string?)delta.Key, "http");
-                Transformer.Transform(app, delta);
+                var protocol = (string?)delta.ValueProperties.FirstOrDefault(vp => vp.Key == "Protocol").Value.newValue;
+                Binding binding;
+                if (protocol == "http")
+                {
+                    binding = colleciton.Add((string?)delta.Key, "http");
+                }
+                else
+                {
+                    var thumbprint = (byte[]?)delta.ValueProperties.FirstOrDefault(vp => vp.Key == "CertificateHash").Value.newValue;
+                    var storeName = (string?)delta.ValueProperties.FirstOrDefault(vp => vp.Key == "CertificateStoreName").Value.newValue;
+                    binding = colleciton.Add((string?)delta.Key, thumbprint, storeName);
+                }
+
+                if (binding != null)
+                    Transformer.Transform(binding, delta);
             }
             else if (delta.Method == DeltaMethod.Remove)
             {
-                var app = colleciton.First(item => item.BindingInformation == (string?)delta.Key);
-                colleciton.Remove(app);
+                var binding = colleciton.First(item => item.BindingInformation == (string?)delta.Key);
+                colleciton.Remove(binding);
             }
             else if (delta.Method == DeltaMethod.Update)
             {
-                var app = colleciton.First(item => item.BindingInformation == (string?)delta.Key);
-                Transformer.Transform(app, delta);
+                var binding = colleciton.First(item => item.BindingInformation == (string?)delta.Key);
+                Transformer.Transform(binding, delta);
             }
         }
     }
