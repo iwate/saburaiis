@@ -324,7 +324,7 @@ namespace SaburaIIS.Agent
                         }
                     }
 
-                    if (Directory.Exists(info.FullName))
+                    if (!Directory.Exists(info.FullName))
                         throw new InvalidOperationException($"Invalid package path. '{path}'");
                 }
             }
