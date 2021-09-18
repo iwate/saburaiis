@@ -110,16 +110,6 @@ namespace SaburaIIS.Agent
 
                     await DeployPackages(dSites, async () =>
                     {
-                        _logger.LogInformation("Transform application pools");
-
-                        foreach (var delta in dAppPools)
-                            Transformer.Transform(_manager.ApplicationPools, delta);
-
-                        _logger.LogInformation("Transform sites");
-
-                        foreach (var delta in dSites)
-                            Transformer.Transform(_manager.Sites, delta);
-
                         _logger.LogInformation("Save snapshot");
 
                         await _store.AddSnapshoptAsync(new Snapshot
@@ -130,6 +120,16 @@ namespace SaburaIIS.Agent
                             ApplicationPools = applicationPools.ToList(),
                             Sites = sites.ToList()
                         });
+
+                        _logger.LogInformation("Transform application pools");
+
+                        foreach (var delta in dAppPools)
+                            Transformer.Transform(_manager.ApplicationPools, delta);
+
+                        _logger.LogInformation("Transform sites");
+
+                        foreach (var delta in dSites)
+                            Transformer.Transform(_manager.Sites, delta);
 
                         _logger.LogInformation("Commit changes");
 
