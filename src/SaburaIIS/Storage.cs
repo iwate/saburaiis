@@ -19,14 +19,14 @@ namespace SaburaIIS
 
         private readonly static HttpClient _httpClient = new HttpClient();
 
-        private bool IsAzureBlog(string url)
+        private bool IsAzureBlob(string url)
         {
             var uri = new Uri(url);
             return uri.Host.EndsWith("blob.core.windows.net") && string.IsNullOrEmpty(uri.Query);
         }
         public virtual async Task<Stream> DownloadAsync(string url)
         {
-            if (IsAzureBlog(url))
+            if (IsAzureBlob(url))
                 return await DownloadAzureBlobAsync(url);
 
             else
@@ -46,7 +46,7 @@ namespace SaburaIIS
 
         public virtual async Task UploadAsync(string url, string path)
         {
-            if (!IsAzureBlog(url))
+            if (!IsAzureBlob(url))
                 throw new NotSupportedException();
 
             var blobClient = new BlobClient(new Uri(url), CreateTokenCredential());
