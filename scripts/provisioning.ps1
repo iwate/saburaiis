@@ -52,7 +52,7 @@ $ErrorActionPreference = 'Stop'
 Install-WindowsFeature -Name Web-Server -IncludeManagementTools
 
 # Setup location root directory
-if (-not Test-Path -Path $LocationRoot) {
+if (-not (Test-Path -Path $LocationRoot)) {
     New-Item -ItemType Directory -Path $LocationRoot
 }
 
