@@ -15,13 +15,13 @@ param (
     [string] 
     $ResourceGroupName,
 
-    [Parameter(ParameterSetName = "ManagedIdentity",  Mandatory=$true, HelpMessage = "Enter CosmosDB instance name.")]
-    [Parameter(ParameterSetName = "ServicePrincipal",  Mandatory=$true, HelpMessage = "Enter CosmosDB instance name.")]
+    [Parameter(ParameterSetName = "ManagedIdentity",  Mandatory=$false, HelpMessage = "Enter CosmosDB instance name.")]
+    [Parameter(ParameterSetName = "ServicePrincipal",  Mandatory=$false, HelpMessage = "Enter CosmosDB instance name.")]
     [string] 
     $CosmosDBName,
 
-    [Parameter(ParameterSetName = "ManagedIdentity",  Mandatory=$true, HelpMessage = "Enter KeyVault instance name.")]
-    [Parameter(ParameterSetName = "ServicePrincipal",  Mandatory=$true, HelpMessage = "Enter KeyVault instance name.")]
+    [Parameter(ParameterSetName = "ManagedIdentity",  Mandatory=$false, HelpMessage = "Enter KeyVault instance name.")]
+    [Parameter(ParameterSetName = "ServicePrincipal",  Mandatory=$false, HelpMessage = "Enter KeyVault instance name.")]
     [string] 
     $KeyVaultName,
 
