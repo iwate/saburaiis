@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "10866116646190518335"
+      "templateHash": "4310085157249297700"
     }
   },
   "parameters": {
@@ -29,6 +29,10 @@
     },
     "vmAdminPassword": {
       "type": "string"
+    },
+    "cosmosdbEnableFreeTier": {
+      "type": "bool",
+      "defaultValue": true
     },
     "location": {
       "type": "string",
@@ -74,6 +78,9 @@
           },
           "principalId": {
             "value": "[parameters('principalId')]"
+          },
+          "cosmosdbEnableFreeTier": {
+            "value": "[parameters('cosmosdbEnableFreeTier')]"
           }
         },
         "template": {

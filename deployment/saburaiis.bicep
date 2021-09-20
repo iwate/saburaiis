@@ -14,6 +14,8 @@ param vmAdminUsername string
 
 param vmAdminPassword string
 
+param cosmosdbEnableFreeTier bool = true
+
 param location string = deployment().location
 
 var vnetName = '${coreName}-vnet-${location}'
@@ -29,6 +31,7 @@ module core './core.bicep' = {
   params: {
     name: coreName
     principalId: principalId
+    cosmosdbEnableFreeTier: cosmosdbEnableFreeTier
   }
 }
 
