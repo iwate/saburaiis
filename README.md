@@ -30,7 +30,7 @@ $ az ad sp show --query objectId --id nnnnnnnn-nnnn-nnnn-nnnn-nnnnnnnnnnnn
 
 Create core resources (CosmoDB, KeyVault, Storage), vnet and a partition (VMSS, PIP, LB, NSG)
 
-[![Deploy To Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fiwate%2Fsaburaiis%2Fmaster%2Fdeployment%2Fcore.json)
+[![Deploy To Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fiwate%2Fsaburaiis%2Fmaster%2Fdeployment%2Fsaburaiis.json)
 
 ### Step 3 - Deploy SaburaIIS Partition(VMSS)
 
