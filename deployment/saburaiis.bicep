@@ -425,11 +425,19 @@ param vmAdminPassword string
 
 param cosmosdbEnableFreeTier bool = true
 
+param biringVNetRGName string = ''
+
+param biringVNetName string = ''
+
+param bringSubnetName string = ''
+
 var location = deployment().location
+
+var biringVNet = biringVNetRGName != '' || biringVNetName != '' || bringSubnetName != ''
 
 var vnetName = '${coreName}-vnet-${location}'
 
-resource coreRG 'Microsoft.Resources/resourceGroups@2021-04-01' = {
+resource coreRG 'Microsoft.Resources/resourceGroups@2021-04-01' =  {
   name: coreName
   location: location
 }
@@ -444,12 +452,12 @@ module core './core.bicep' = {
   }
 }
 
-resource networkRG 'Microsoft.Resources/resourceGroups@2021-04-01' = {
+resource networkRG 'Microsoft.Resources/resourceGroups@2021-04-01' = if (!biringVNet) {
   name: '${coreName}-network'
   location: location
 }
 
-module network 'network.bicep' = {
+module network 'network.bicep' = if (!biringVNet) {
   name: 'networkDeploy'
   scope: networkRG
   params: {
@@ -468,9 +476,9 @@ module vmss 'partition.bicep' = {
   scope: partitionRG
   params: {
     name: partitionName
-    vnetRGName: networkRG.name
-    vnetName: vnetName
-    subnetName: partitionName
+    vnetRGName: (biringVNet ? biringVNetRGName : networkRG.name)
+    vnetName: (biringVNet ? biringVNetName : vnetName)
+    subnetName: (biringVNet ? biringVNetName : partitionName)
     vmPrefix: vmPrefix
     vmSku: vmSku
     adminUsername: vmAdminUsername

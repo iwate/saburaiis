@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "5157141898921658929"
+      "templateHash": "5179149322519795954"
     }
   },
   "parameters": {
@@ -441,11 +441,24 @@
     "cosmosdbEnableFreeTier": {
       "type": "bool",
       "defaultValue": true
+    },
+    "biringVNetRGName": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "biringVNetName": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "bringSubnetName": {
+      "type": "string",
+      "defaultValue": ""
     }
   },
   "functions": [],
   "variables": {
     "location": "[deployment().location]",
+    "biringVNet": "[or(or(not(equals(parameters('biringVNetRGName'), '')), not(equals(parameters('biringVNetName'), ''))), not(equals(parameters('bringSubnetName'), '')))]",
     "vnetName": "[format('{0}-vnet-{1}', parameters('coreName'), variables('location'))]"
   },
   "resources": [
@@ -456,6 +469,7 @@
       "location": "[variables('location')]"
     },
     {
+      "condition": "[not(variables('biringVNet'))]",
       "type": "Microsoft.Resources/resourceGroups",
       "apiVersion": "2021-04-01",
       "name": "[format('{0}-network', parameters('coreName'))]",
@@ -837,6 +851,7 @@
       ]
     },
     {
+      "condition": "[not(variables('biringVNet'))]",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2019-10-01",
       "name": "networkDeploy",
@@ -935,13 +950,13 @@
             "value": "[parameters('partitionName')]"
           },
           "vnetRGName": {
-            "value": "[format('{0}-network', parameters('coreName'))]"
+            "value": "[if(variables('biringVNet'), parameters('biringVNetRGName'), format('{0}-network', parameters('coreName')))]"
           },
           "vnetName": {
-            "value": "[variables('vnetName')]"
+            "value": "[if(variables('biringVNet'), parameters('biringVNetName'), variables('vnetName'))]"
           },
           "subnetName": {
-            "value": "[parameters('partitionName')]"
+            "value": "[if(variables('biringVNet'), parameters('biringVNetName'), parameters('partitionName'))]"
           },
           "vmPrefix": {
             "value": "[parameters('vmPrefix')]"
