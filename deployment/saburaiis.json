@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "4310085157249297700"
+      "templateHash": "16014866316281714076"
     }
   },
   "parameters": {
@@ -33,34 +33,31 @@
     "cosmosdbEnableFreeTier": {
       "type": "bool",
       "defaultValue": true
-    },
-    "location": {
-      "type": "string",
-      "defaultValue": "[deployment().location]"
     }
   },
   "functions": [],
   "variables": {
-    "vnetName": "[format('{0}-vnet-{1}', parameters('coreName'), parameters('location'))]"
+    "location": "[deployment().location]",
+    "vnetName": "[format('{0}-vnet-{1}', parameters('coreName'), variables('location'))]"
   },
   "resources": [
     {
       "type": "Microsoft.Resources/resourceGroups",
       "apiVersion": "2021-04-01",
       "name": "[parameters('coreName')]",
-      "location": "[parameters('location')]"
+      "location": "[variables('location')]"
     },
     {
       "type": "Microsoft.Resources/resourceGroups",
       "apiVersion": "2021-04-01",
       "name": "[format('{0}-network', parameters('coreName'))]",
-      "location": "[parameters('location')]"
+      "location": "[variables('location')]"
     },
     {
       "type": "Microsoft.Resources/resourceGroups",
       "apiVersion": "2021-04-01",
       "name": "[parameters('partitionName')]",
-      "location": "[parameters('location')]"
+      "location": "[variables('location')]"
     },
     {
       "type": "Microsoft.Resources/deployments",
