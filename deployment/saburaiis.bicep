@@ -16,7 +16,7 @@ param vmAdminPassword string
 
 param cosmosdbEnableFreeTier bool = true
 
-param location string = deployment().location
+var location = deployment().location
 
 var vnetName = '${coreName}-vnet-${location}'
 
