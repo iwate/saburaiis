@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "13848761936132853988"
+      "templateHash": "4834704656100626906"
     }
   },
   "parameters": {
@@ -274,17 +274,70 @@
     {
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2020-08-01-preview",
-      "scope": "[format('Microsoft.KeyVault/vaults/{0}', parameters('name'))]",
-      "name": "[guid('ba92f5b4-2d11-453d-a403-e96b0029c9fe', parameters('principalId'), resourceId('Microsoft.KeyVault/vaults', parameters('name')))]",
+      "scope": "[format('Microsoft.Storage/storageAccounts/{0}/blobServices/{1}/containers/{2}', split(format('{0}/default/packages', parameters('name')), '/')[0], split(format('{0}/default/packages', parameters('name')), '/')[1], split(format('{0}/default/packages', parameters('name')), '/')[2])]",
+      "name": "[guid('ba92f5b4-2d11-453d-a403-e96b0029c9fe', parameters('principalId'), resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', split(format('{0}/default/packages', parameters('name')), '/')[0], split(format('{0}/default/packages', parameters('name')), '/')[1], split(format('{0}/default/packages', parameters('name')), '/')[2]))]",
       "properties": {
         "principalId": "[parameters('principalId')]",
         "principalType": "ServicePrincipal",
         "roleDefinitionId": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe', subscription().subscriptionId)]"
       },
       "dependsOn": [
-        "[resourceId('Microsoft.KeyVault/vaults', parameters('name'))]",
-        "[resourceId('Microsoft.Storage/storageAccounts', parameters('name'))]"
+        "[resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', split(format('{0}/default/packages', parameters('name')), '/')[0], split(format('{0}/default/packages', parameters('name')), '/')[1], split(format('{0}/default/packages', parameters('name')), '/')[2])]"
       ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleDefinitions",
+      "apiVersion": "2018-01-01-preview",
+      "name": "5e66d809-b24f-46a8-bc5d-141bd610c09a",
+      "properties": {
+        "roleName": "DocumentDB Keys Accessor",
+        "description": "List keys of assigned DocumentDBs",
+        "type": "customRole",
+        "permissions": [
+          {
+            "actions": [
+              "Microsoft.DocumentDB/databaseAccounts/listKeys/action"
+            ]
+          }
+        ],
+        "assignableScopes": [
+          "[format('{0}/resourceGroups/{1}', subscription().id, resourceGroup().name)]"
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "apiVersion": "2021-06-01",
+      "name": "[parameters('name')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "sku": {
+          "name": "PerGB2018"
+        },
+        "retentionInDays": 30
+      }
     }
-  ]
+  ],
+  "outputs": {
+    "cosmosdbName": {
+      "type": "string",
+      "value": "[parameters('name')]"
+    },
+    "keyvaultName": {
+      "type": "string",
+      "value": "[parameters('name')]"
+    },
+    "packageContainerName": {
+      "type": "string",
+      "value": "[format('{0}/default/packages', parameters('name'))]"
+    },
+    "workspaceId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('name'))).customerId]"
+    },
+    "workspaceKey": {
+      "type": "string",
+      "value": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', parameters('name')), '2021-06-01').primarySharedKey]"
+    }
+  }
 }

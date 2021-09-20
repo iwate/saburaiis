@@ -1,0 +1,1449 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.4.613.9944",
+      "templateHash": "10866116646190518335"
+    }
+  },
+  "parameters": {
+    "principalId": {
+      "type": "string"
+    },
+    "coreName": {
+      "type": "string"
+    },
+    "partitionName": {
+      "type": "string"
+    },
+    "vmPrefix": {
+      "type": "string"
+    },
+    "vmSku": {
+      "type": "string"
+    },
+    "vmAdminUsername": {
+      "type": "string"
+    },
+    "vmAdminPassword": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[deployment().location]"
+    }
+  },
+  "functions": [],
+  "variables": {
+    "vnetName": "[format('{0}-vnet-{1}', parameters('coreName'), parameters('location'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/resourceGroups",
+      "apiVersion": "2021-04-01",
+      "name": "[parameters('coreName')]",
+      "location": "[parameters('location')]"
+    },
+    {
+      "type": "Microsoft.Resources/resourceGroups",
+      "apiVersion": "2021-04-01",
+      "name": "[format('{0}-network', parameters('coreName'))]",
+      "location": "[parameters('location')]"
+    },
+    {
+      "type": "Microsoft.Resources/resourceGroups",
+      "apiVersion": "2021-04-01",
+      "name": "[parameters('partitionName')]",
+      "location": "[parameters('location')]"
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "coreDeploy",
+      "resourceGroup": "[parameters('coreName')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "name": {
+            "value": "[parameters('coreName')]"
+          },
+          "principalId": {
+            "value": "[parameters('principalId')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.4.613.9944",
+              "templateHash": "4834704656100626906"
+            }
+          },
+          "parameters": {
+            "name": {
+              "type": "string"
+            },
+            "principalId": {
+              "type": "string"
+            },
+            "cosmosdbEnableFreeTier": {
+              "type": "bool",
+              "defaultValue": true
+            }
+          },
+          "functions": [],
+          "resources": [
+            {
+              "type": "Microsoft.DocumentDB/databaseAccounts",
+              "apiVersion": "2021-06-15",
+              "name": "[parameters('name')]",
+              "kind": "GlobalDocumentDB",
+              "location": "[resourceGroup().location]",
+              "properties": {
+                "enableFreeTier": "[parameters('cosmosdbEnableFreeTier')]",
+                "databaseAccountOfferType": "Standard",
+                "locations": [
+                  {
+                    "locationName": "[resourceGroup().location]"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
+              "apiVersion": "2021-06-15",
+              "name": "[format('{0}/saburaiis', parameters('name'))]",
+              "location": "[resourceGroup().location]",
+              "properties": {
+                "resource": {
+                  "id": "saburaiis"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('name'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+              "apiVersion": "2021-06-15",
+              "name": "[format('{0}/saburaiis/partitions', parameters('name'))]",
+              "location": "[resourceGroup().location]",
+              "properties": {
+                "resource": {
+                  "id": "partitions",
+                  "partitionKey": {
+                    "paths": [
+                      "/Name"
+                    ]
+                  },
+                  "indexingPolicy": {
+                    "includedPaths": [
+                      {
+                        "path": "/*"
+                      }
+                    ],
+                    "excludedPaths": [
+                      {
+                        "path": "/\"_etag\"/?"
+                      },
+                      {
+                        "path": "/ApplicationPools/*"
+                      },
+                      {
+                        "path": "/Sites/*"
+                      }
+                    ]
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('name'))]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', split(format('{0}/saburaiis', parameters('name')), '/')[0], split(format('{0}/saburaiis', parameters('name')), '/')[1])]"
+              ]
+            },
+            {
+              "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+              "apiVersion": "2021-06-15",
+              "name": "[format('{0}/saburaiis/snapshots', parameters('name'))]",
+              "location": "[resourceGroup().location]",
+              "properties": {
+                "resource": {
+                  "id": "snapshots",
+                  "partitionKey": {
+                    "paths": [
+                      "/Name"
+                    ]
+                  },
+                  "indexingPolicy": {
+                    "includedPaths": [
+                      {
+                        "path": "/*"
+                      }
+                    ],
+                    "excludedPaths": [
+                      {
+                        "path": "/\"_etag\"/?"
+                      },
+                      {
+                        "path": "/ApplicationPools/*"
+                      },
+                      {
+                        "path": "/Sites/*"
+                      }
+                    ]
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('name'))]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', split(format('{0}/saburaiis', parameters('name')), '/')[0], split(format('{0}/saburaiis', parameters('name')), '/')[1])]"
+              ]
+            },
+            {
+              "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+              "apiVersion": "2021-06-15",
+              "name": "[format('{0}/saburaiis/packages', parameters('name'))]",
+              "location": "[resourceGroup().location]",
+              "properties": {
+                "resource": {
+                  "id": "packages",
+                  "partitionKey": {
+                    "paths": [
+                      "/Name"
+                    ]
+                  },
+                  "indexingPolicy": {
+                    "includedPaths": [
+                      {
+                        "path": "/*"
+                      }
+                    ],
+                    "excludedPaths": [
+                      {
+                        "path": "/\"_etag\"/?"
+                      }
+                    ]
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('name'))]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', split(format('{0}/saburaiis', parameters('name')), '/')[0], split(format('{0}/saburaiis', parameters('name')), '/')[1])]"
+              ]
+            },
+            {
+              "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+              "apiVersion": "2021-06-15",
+              "name": "[format('{0}/saburaiis/instances', parameters('name'))]",
+              "location": "[resourceGroup().location]",
+              "properties": {
+                "resource": {
+                  "id": "instances",
+                  "partitionKey": {
+                    "paths": [
+                      "/ScaleSetName"
+                    ]
+                  },
+                  "indexingPolicy": {
+                    "includedPaths": [
+                      {
+                        "path": "/*"
+                      }
+                    ],
+                    "excludedPaths": [
+                      {
+                        "path": "/\"_etag\"/?"
+                      }
+                    ]
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('name'))]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', split(format('{0}/saburaiis', parameters('name')), '/')[0], split(format('{0}/saburaiis', parameters('name')), '/')[1])]"
+              ]
+            },
+            {
+              "type": "Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments",
+              "apiVersion": "2021-06-15",
+              "name": "[format('{0}/{1}', parameters('name'), guid('00000000-0000-0000-0000-000000000002', parameters('principalId'), resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('name'))))]",
+              "properties": {
+                "scope": "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('name'))]",
+                "principalId": "[parameters('principalId')]",
+                "roleDefinitionId": "[format('/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.DocumentDB/databaseAccounts/{2}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002', subscription().subscriptionId, resourceGroup().name, parameters('name'))]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('name'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.KeyVault/vaults",
+              "apiVersion": "2021-04-01-preview",
+              "name": "[parameters('name')]",
+              "location": "[resourceGroup().location]",
+              "properties": {
+                "sku": {
+                  "family": "A",
+                  "name": "standard"
+                },
+                "tenantId": "[subscription().tenantId]",
+                "accessPolicies": [],
+                "enabledForDeployment": true,
+                "enabledForDiskEncryption": false,
+                "enabledForTemplateDeployment": false,
+                "enableSoftDelete": true,
+                "softDeleteRetentionInDays": 90,
+                "enableRbacAuthorization": true
+              }
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2020-08-01-preview",
+              "scope": "[format('Microsoft.KeyVault/vaults/{0}', parameters('name'))]",
+              "name": "[guid('21090545-7ca7-4776-b22c-e363652d74d2', parameters('principalId'), resourceId('Microsoft.KeyVault/vaults', parameters('name')))]",
+              "properties": {
+                "principalId": "[parameters('principalId')]",
+                "principalType": "ServicePrincipal",
+                "roleDefinitionId": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/21090545-7ca7-4776-b22c-e363652d74d2', subscription().subscriptionId)]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', parameters('name'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2020-08-01-preview",
+              "scope": "[format('Microsoft.KeyVault/vaults/{0}', parameters('name'))]",
+              "name": "[guid('4633458b-17de-408a-b874-0445c86b69e6', parameters('principalId'), resourceId('Microsoft.KeyVault/vaults', parameters('name')))]",
+              "properties": {
+                "principalId": "[parameters('principalId')]",
+                "principalType": "ServicePrincipal",
+                "roleDefinitionId": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/4633458b-17de-408a-b874-0445c86b69e6', subscription().subscriptionId)]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', parameters('name'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Storage/storageAccounts",
+              "apiVersion": "2021-04-01",
+              "name": "[parameters('name')]",
+              "location": "[resourceGroup().location]",
+              "kind": "StorageV2",
+              "sku": {
+                "name": "Standard_ZRS"
+              }
+            },
+            {
+              "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+              "apiVersion": "2021-04-01",
+              "name": "[format('{0}/default/packages', parameters('name'))]",
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('name'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2020-08-01-preview",
+              "scope": "[format('Microsoft.Storage/storageAccounts/{0}/blobServices/{1}/containers/{2}', split(format('{0}/default/packages', parameters('name')), '/')[0], split(format('{0}/default/packages', parameters('name')), '/')[1], split(format('{0}/default/packages', parameters('name')), '/')[2])]",
+              "name": "[guid('ba92f5b4-2d11-453d-a403-e96b0029c9fe', parameters('principalId'), resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', split(format('{0}/default/packages', parameters('name')), '/')[0], split(format('{0}/default/packages', parameters('name')), '/')[1], split(format('{0}/default/packages', parameters('name')), '/')[2]))]",
+              "properties": {
+                "principalId": "[parameters('principalId')]",
+                "principalType": "ServicePrincipal",
+                "roleDefinitionId": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe', subscription().subscriptionId)]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', split(format('{0}/default/packages', parameters('name')), '/')[0], split(format('{0}/default/packages', parameters('name')), '/')[1], split(format('{0}/default/packages', parameters('name')), '/')[2])]"
+              ]
+            },
+            {
+              "type": "Microsoft.Authorization/roleDefinitions",
+              "apiVersion": "2018-01-01-preview",
+              "name": "5e66d809-b24f-46a8-bc5d-141bd610c09a",
+              "properties": {
+                "roleName": "DocumentDB Keys Accessor",
+                "description": "List keys of assigned DocumentDBs",
+                "type": "customRole",
+                "permissions": [
+                  {
+                    "actions": [
+                      "Microsoft.DocumentDB/databaseAccounts/listKeys/action"
+                    ]
+                  }
+                ],
+                "assignableScopes": [
+                  "[format('{0}/resourceGroups/{1}', subscription().id, resourceGroup().name)]"
+                ]
+              }
+            },
+            {
+              "type": "Microsoft.OperationalInsights/workspaces",
+              "apiVersion": "2021-06-01",
+              "name": "[parameters('name')]",
+              "location": "[resourceGroup().location]",
+              "properties": {
+                "sku": {
+                  "name": "PerGB2018"
+                },
+                "retentionInDays": 30
+              }
+            }
+          ],
+          "outputs": {
+            "cosmosdbName": {
+              "type": "string",
+              "value": "[parameters('name')]"
+            },
+            "keyvaultName": {
+              "type": "string",
+              "value": "[parameters('name')]"
+            },
+            "packageContainerName": {
+              "type": "string",
+              "value": "[format('{0}/default/packages', parameters('name'))]"
+            },
+            "workspaceId": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('name'))).customerId]"
+            },
+            "workspaceKey": {
+              "type": "string",
+              "value": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', parameters('name')), '2021-06-01').primarySharedKey]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('coreName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "networkDeploy",
+      "resourceGroup": "[format('{0}-network', parameters('coreName'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "vnetName": {
+            "value": "[variables('vnetName')]"
+          },
+          "subnetName": {
+            "value": "[parameters('partitionName')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.4.613.9944",
+              "templateHash": "12558195503632406468"
+            }
+          },
+          "parameters": {
+            "vnetName": {
+              "type": "string"
+            },
+            "vnetAddressPrefix": {
+              "type": "string",
+              "defaultValue": "10.0.0.0/16"
+            },
+            "subnetName": {
+              "type": "string"
+            },
+            "subnetAddressPrefix": {
+              "type": "string",
+              "defaultValue": "10.0.0.0/24"
+            }
+          },
+          "functions": [],
+          "resources": [
+            {
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2021-02-01",
+              "name": "[parameters('vnetName')]",
+              "location": "[resourceGroup().location]",
+              "properties": {
+                "addressSpace": {
+                  "addressPrefixes": [
+                    "[parameters('vnetAddressPrefix')]"
+                  ]
+                },
+                "subnets": [
+                  {
+                    "name": "[parameters('subnetName')]",
+                    "properties": {
+                      "addressPrefix": "[parameters('subnetAddressPrefix')]"
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "outputs": {
+            "vnetId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+            },
+            "subnetId": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))).subnets[0].id]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', format('{0}-network', parameters('coreName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "partitionDeploy",
+      "resourceGroup": "[parameters('partitionName')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "name": {
+            "value": "[parameters('partitionName')]"
+          },
+          "vnetRGName": {
+            "value": "[format('{0}-network', parameters('coreName'))]"
+          },
+          "vnetName": {
+            "value": "[variables('vnetName')]"
+          },
+          "subnetName": {
+            "value": "[parameters('partitionName')]"
+          },
+          "vmPrefix": {
+            "value": "[parameters('vmPrefix')]"
+          },
+          "vmSku": {
+            "value": "[parameters('vmSku')]"
+          },
+          "adminUsername": {
+            "value": "[parameters('vmAdminUsername')]"
+          },
+          "adminPassword": {
+            "value": "[parameters('vmAdminPassword')]"
+          },
+          "instanceCount": {
+            "value": 2
+          },
+          "saburaiisCoreName": {
+            "value": "[parameters('coreName')]"
+          },
+          "workspaceId": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('coreName')), 'Microsoft.Resources/deployments', 'coreDeploy'), '2019-10-01').outputs.workspaceId.value]"
+          },
+          "workspaceKey": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('coreName')), 'Microsoft.Resources/deployments', 'coreDeploy'), '2019-10-01').outputs.workspaceKey.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.4.613.9944",
+              "templateHash": "4951293931317305728"
+            }
+          },
+          "parameters": {
+            "name": {
+              "type": "string"
+            },
+            "vmPrefix": {
+              "type": "string"
+            },
+            "vmSku": {
+              "type": "string",
+              "defaultValue": "Standard_B4ms",
+              "allowedValues": [
+                "Standard_A0",
+                "Standard_A1",
+                "Standard_A1_v2",
+                "Standard_A2",
+                "Standard_A2_v2",
+                "Standard_A2m_v2",
+                "Standard_A3",
+                "Standard_A4",
+                "Standard_A4_v2",
+                "Standard_A4m_v2",
+                "Standard_A5",
+                "Standard_A6",
+                "Standard_A7",
+                "Standard_A8_v2",
+                "Standard_A8m_v2",
+                "Standard_B12ms",
+                "Standard_B16ms",
+                "Standard_B1ls",
+                "Standard_B1ms",
+                "Standard_B1s",
+                "Standard_B20ms",
+                "Standard_B2ms",
+                "Standard_B2s",
+                "Standard_B4ms",
+                "Standard_B8ms",
+                "Standard_D1",
+                "Standard_D1_v2",
+                "Standard_D11",
+                "Standard_D11_v2",
+                "Standard_D11_v2_Promo",
+                "Standard_D12",
+                "Standard_D12_v2",
+                "Standard_D12_v2_Promo",
+                "Standard_D13",
+                "Standard_D13_v2",
+                "Standard_D13_v2_Promo",
+                "Standard_D14",
+                "Standard_D14_v2",
+                "Standard_D14_v2_Promo",
+                "Standard_D15_v2",
+                "Standard_D16_v3",
+                "Standard_D16_v4",
+                "Standard_D16a_v4",
+                "Standard_D16as_v4",
+                "Standard_D16d_v4",
+                "Standard_D16ds_v4",
+                "Standard_D16s_v3",
+                "Standard_D16s_v4",
+                "Standard_D2",
+                "Standard_D2_v2",
+                "Standard_D2_v2_Promo",
+                "Standard_D2_v3",
+                "Standard_D2_v4",
+                "Standard_D2a_v4",
+                "Standard_D2as_v4",
+                "Standard_D2d_v4",
+                "Standard_D2ds_v4",
+                "Standard_D2s_v3",
+                "Standard_D2s_v4",
+                "Standard_D3",
+                "Standard_D3_v2",
+                "Standard_D3_v2_Promo",
+                "Standard_D32_v3",
+                "Standard_D32_v4",
+                "Standard_D32a_v4",
+                "Standard_D32as_v4",
+                "Standard_D32d_v4",
+                "Standard_D32ds_v4",
+                "Standard_D32s_v3",
+                "Standard_D32s_v4",
+                "Standard_D4",
+                "Standard_D4_v2",
+                "Standard_D4_v2_Promo",
+                "Standard_D4_v3",
+                "Standard_D4_v4",
+                "Standard_D48_v3",
+                "Standard_D48_v4",
+                "Standard_D48a_v4",
+                "Standard_D48as_v4",
+                "Standard_D48d_v4",
+                "Standard_D48ds_v4",
+                "Standard_D48s_v3",
+                "Standard_D48s_v4",
+                "Standard_D4a_v4",
+                "Standard_D4as_v4",
+                "Standard_D4d_v4",
+                "Standard_D4ds_v4",
+                "Standard_D4s_v3",
+                "Standard_D4s_v4",
+                "Standard_D5_v2",
+                "Standard_D5_v2_Promo",
+                "Standard_D64_v3",
+                "Standard_D64_v4",
+                "Standard_D64a_v4",
+                "Standard_D64as_v4",
+                "Standard_D64d_v4",
+                "Standard_D64ds_v4",
+                "Standard_D64s_v3",
+                "Standard_D64s_v4",
+                "Standard_D8_v3",
+                "Standard_D8_v4",
+                "Standard_D8a_v4",
+                "Standard_D8as_v4",
+                "Standard_D8d_v4",
+                "Standard_D8ds_v4",
+                "Standard_D8s_v3",
+                "Standard_D8s_v4",
+                "Standard_D96a_v4",
+                "Standard_D96as_v4",
+                "Standard_DC1s_v2",
+                "Standard_DC2s",
+                "Standard_DC2s_v2",
+                "Standard_DC4s",
+                "Standard_DC4s_v2",
+                "Standard_DC8_v2",
+                "Standard_DS1",
+                "Standard_DS1_v2",
+                "Standard_DS11",
+                "Standard_DS11_v2",
+                "Standard_DS11_v2_Promo",
+                "Standard_DS11-1_v2",
+                "Standard_DS12",
+                "Standard_DS12_v2",
+                "Standard_DS12_v2_Promo",
+                "Standard_DS12-1_v2",
+                "Standard_DS12-2_v2",
+                "Standard_DS13",
+                "Standard_DS13_v2",
+                "Standard_DS13_v2_Promo",
+                "Standard_DS13-2_v2",
+                "Standard_DS13-4_v2",
+                "Standard_DS14",
+                "Standard_DS14_v2",
+                "Standard_DS14_v2_Promo",
+                "Standard_DS14-4_v2",
+                "Standard_DS14-8_v2",
+                "Standard_DS15_v2",
+                "Standard_DS2",
+                "Standard_DS2_v2",
+                "Standard_DS2_v2_Promo",
+                "Standard_DS3",
+                "Standard_DS3_v2",
+                "Standard_DS3_v2_Promo",
+                "Standard_DS4",
+                "Standard_DS4_v2",
+                "Standard_DS4_v2_Promo",
+                "Standard_DS5_v2",
+                "Standard_DS5_v2_Promo",
+                "Standard_E16_v3",
+                "Standard_E16_v4",
+                "Standard_E16-4as_v4",
+                "Standard_E16-4ds_v4",
+                "Standard_E16-4s_v3",
+                "Standard_E16-4s_v4",
+                "Standard_E16-8as_v4",
+                "Standard_E16-8ds_v4",
+                "Standard_E16-8s_v3",
+                "Standard_E16-8s_v4",
+                "Standard_E16a_v4",
+                "Standard_E16as_v4",
+                "Standard_E16d_v4",
+                "Standard_E16ds_v4",
+                "Standard_E16s_v3",
+                "Standard_E16s_v4",
+                "Standard_E2_v3",
+                "Standard_E2_v4",
+                "Standard_E20_v3",
+                "Standard_E20_v4",
+                "Standard_E20a_v4",
+                "Standard_E20as_v4",
+                "Standard_E20d_v4",
+                "Standard_E20ds_v4",
+                "Standard_E20s_v3",
+                "Standard_E20s_v4",
+                "Standard_E2a_v4",
+                "Standard_E2as_v4",
+                "Standard_E2d_v4",
+                "Standard_E2ds_v4",
+                "Standard_E2s_v3",
+                "Standard_E2s_v4",
+                "Standard_E32_v3",
+                "Standard_E32_v4",
+                "Standard_E32-16as_v4",
+                "Standard_E32-16ds_v4",
+                "Standard_E32-16s_v3",
+                "Standard_E32-16s_v4",
+                "Standard_E32-8as_v4",
+                "Standard_E32-8ds_v4",
+                "Standard_E32-8s_v3",
+                "Standard_E32-8s_v4",
+                "Standard_E32a_v4",
+                "Standard_E32as_v4",
+                "Standard_E32d_v4",
+                "Standard_E32ds_v4",
+                "Standard_E32s_v3",
+                "Standard_E32s_v4",
+                "Standard_E4_v3",
+                "Standard_E4_v4",
+                "Standard_E4-2as_v4",
+                "Standard_E4-2ds_v4",
+                "Standard_E4-2s_v3",
+                "Standard_E4-2s_v4",
+                "Standard_E48_v3",
+                "Standard_E48_v4",
+                "Standard_E48a_v4",
+                "Standard_E48as_v4",
+                "Standard_E48d_v4",
+                "Standard_E48ds_v4",
+                "Standard_E48s_v3",
+                "Standard_E48s_v4",
+                "Standard_E4a_v4",
+                "Standard_E4as_v4",
+                "Standard_E4d_v4",
+                "Standard_E4ds_v4",
+                "Standard_E4s_v3",
+                "Standard_E4s_v4",
+                "Standard_E64_v3",
+                "Standard_E64_v4",
+                "Standard_E64-16as_v4",
+                "Standard_E64-16ds_v4",
+                "Standard_E64-16s_v3",
+                "Standard_E64-16s_v4",
+                "Standard_E64-32as_v4",
+                "Standard_E64-32ds_v4",
+                "Standard_E64-32s_v3",
+                "Standard_E64-32s_v4",
+                "Standard_E64a_v4",
+                "Standard_E64as_v4",
+                "Standard_E64d_v4",
+                "Standard_E64ds_v4",
+                "Standard_E64i_v3",
+                "Standard_E64is_v3",
+                "Standard_E64s_v3",
+                "Standard_E64s_v4",
+                "Standard_E8_v3",
+                "Standard_E8_v4",
+                "Standard_E80ids_v4",
+                "Standard_E80is_v4",
+                "Standard_E8-2as_v4",
+                "Standard_E8-2ds_v4",
+                "Standard_E8-2s_v3",
+                "Standard_E8-2s_v4",
+                "Standard_E8-4as_v4",
+                "Standard_E8-4ds_v4",
+                "Standard_E8-4s_v3",
+                "Standard_E8-4s_v4",
+                "Standard_E8a_v4",
+                "Standard_E8as_v4",
+                "Standard_E8d_v4",
+                "Standard_E8ds_v4",
+                "Standard_E8s_v3",
+                "Standard_E8s_v4",
+                "Standard_E96-24as_v4",
+                "Standard_E96-48as_v4",
+                "Standard_E96a_v4",
+                "Standard_E96as_v4",
+                "Standard_F1",
+                "Standard_F16",
+                "Standard_F16s",
+                "Standard_F16s_v2",
+                "Standard_F1s",
+                "Standard_F2",
+                "Standard_F2s",
+                "Standard_F2s_v2",
+                "Standard_F32s_v2",
+                "Standard_F4",
+                "Standard_F48s_v2",
+                "Standard_F4s",
+                "Standard_F4s_v2",
+                "Standard_F64s_v2",
+                "Standard_F72s_v2",
+                "Standard_F8",
+                "Standard_F8s",
+                "Standard_F8s_v2",
+                "Standard_FX12mds",
+                "Standard_FX24mds",
+                "Standard_FX36mds",
+                "Standard_FX48mds",
+                "Standard_FX4mds",
+                "Standard_G1",
+                "Standard_G2",
+                "Standard_G3",
+                "Standard_G4",
+                "Standard_G5",
+                "Standard_GS1",
+                "Standard_GS2",
+                "Standard_GS3",
+                "Standard_GS4",
+                "Standard_GS4-4",
+                "Standard_GS4-8",
+                "Standard_GS5",
+                "Standard_GS5-16",
+                "Standard_GS5-8",
+                "Standard_H16",
+                "Standard_H16_Promo",
+                "Standard_H16m",
+                "Standard_H16m_Promo",
+                "Standard_H16mr",
+                "Standard_H16mr_Promo",
+                "Standard_H16r",
+                "Standard_H16r_Promo",
+                "Standard_H8",
+                "Standard_H8_Promo",
+                "Standard_H8m",
+                "Standard_H8m_Promo",
+                "Standard_HB120-16rs_v3",
+                "Standard_HB120-32rs_v3",
+                "Standard_HB120-64rs_v3",
+                "Standard_HB120-96rs_v3",
+                "Standard_HB120rs_v2",
+                "Standard_HB120rs_v3",
+                "Standard_HB60rs",
+                "Standard_HC44rs",
+                "Standard_L16s",
+                "Standard_L16s_v2",
+                "Standard_L32s",
+                "Standard_L32s_v2",
+                "Standard_L48s_v2",
+                "Standard_L4s",
+                "Standard_L64s_v2",
+                "Standard_L80s_v2",
+                "Standard_L8s",
+                "Standard_L8s_v2",
+                "Standard_M128",
+                "Standard_M128-32ms",
+                "Standard_M128-64ms",
+                "Standard_M128dms_v2",
+                "Standard_M128ds_v2",
+                "Standard_M128m",
+                "Standard_M128ms",
+                "Standard_M128ms_v2",
+                "Standard_M128s",
+                "Standard_M128s_v2",
+                "Standard_M16-4ms",
+                "Standard_M16-8ms",
+                "Standard_M16ms",
+                "Standard_M192idms_v2",
+                "Standard_M192ids_v2",
+                "Standard_M192ims_v2",
+                "Standard_M192is_v2",
+                "Standard_M208ms_v2",
+                "Standard_M208s_v2",
+                "Standard_M32-16ms",
+                "Standard_M32-8ms",
+                "Standard_M32dms_v2",
+                "Standard_M32ls",
+                "Standard_M32ms",
+                "Standard_M32ms_v2",
+                "Standard_M32ts",
+                "Standard_M416-208ms_v2",
+                "Standard_M416-208s_v2",
+                "Standard_M416ms_v2",
+                "Standard_M416s_v2",
+                "Standard_M64",
+                "Standard_M64-16ms",
+                "Standard_M64-32ms",
+                "Standard_M64dms_v2",
+                "Standard_M64ds_v2",
+                "Standard_M64ls",
+                "Standard_M64m",
+                "Standard_M64ms",
+                "Standard_M64ms_v2",
+                "Standard_M64s",
+                "Standard_M64s_v2",
+                "Standard_M8-2ms",
+                "Standard_M8-4ms",
+                "Standard_M8ms",
+                "Standard_NC12",
+                "Standard_NC12_Promo",
+                "Standard_NC12s_v2",
+                "Standard_NC12s_v3",
+                "Standard_NC16as_T4_v3",
+                "Standard_NC24",
+                "Standard_NC24_Promo",
+                "Standard_NC24r",
+                "Standard_NC24r_Promo",
+                "Standard_NC24rs_v2",
+                "Standard_NC24rs_v3",
+                "Standard_NC24s_v2",
+                "Standard_NC24s_v3",
+                "Standard_NC4as_T4_v3",
+                "Standard_NC6",
+                "Standard_NC6_Promo",
+                "Standard_NC64as_T4_v3",
+                "Standard_NC6s_v2",
+                "Standard_NC6s_v3",
+                "Standard_NC8as_T4_v3",
+                "Standard_ND12s",
+                "Standard_ND24rs",
+                "Standard_ND24s",
+                "Standard_ND40rs_v2",
+                "Standard_ND6s",
+                "Standard_ND96asr_v4",
+                "Standard_NV12",
+                "Standard_NV12s_v2",
+                "Standard_NV12s_v3",
+                "Standard_NV16as_v4",
+                "Standard_NV24",
+                "Standard_NV24s_v2",
+                "Standard_NV24s_v3",
+                "Standard_NV32as_v4",
+                "Standard_NV48s_v3",
+                "Standard_NV4as_v4",
+                "Standard_NV6",
+                "Standard_NV6s_v2",
+                "Standard_NV8as_v4"
+              ]
+            },
+            "instanceCount": {
+              "type": "int"
+            },
+            "diskSize": {
+              "type": "int",
+              "defaultValue": 127
+            },
+            "adminUsername": {
+              "type": "string"
+            },
+            "adminPassword": {
+              "type": "secureString"
+            },
+            "customScriptUrl": {
+              "type": "string",
+              "defaultValue": "https://raw.githubusercontent.com/iwate/saburaiis/main/scripts/custom.ps1"
+            },
+            "customScriptCommand": {
+              "type": "string",
+              "defaultValue": "powershell -ExecutionPolicy Unrestricted -File custom.ps1"
+            },
+            "saburaiisCoreName": {
+              "type": "string"
+            },
+            "workspaceId": {
+              "type": "string"
+            },
+            "workspaceKey": {
+              "type": "string"
+            },
+            "vnetRGName": {
+              "type": "string"
+            },
+            "vnetName": {
+              "type": "string"
+            },
+            "subnetName": {
+              "type": "string"
+            }
+          },
+          "functions": [],
+          "resources": [
+            {
+              "type": "Microsoft.Network/publicIPAddresses",
+              "apiVersion": "2021-02-01",
+              "name": "[format('{0}-pip', parameters('name'))]",
+              "location": "[resourceGroup().location]",
+              "sku": {
+                "name": "Standard"
+              },
+              "properties": {
+                "publicIPAllocationMethod": "Static"
+              }
+            },
+            {
+              "type": "Microsoft.Network/loadBalancers",
+              "apiVersion": "2021-02-01",
+              "name": "[format('{0}-lb', parameters('name'))]",
+              "location": "[resourceGroup().location]",
+              "sku": {
+                "name": "Standard"
+              },
+              "properties": {
+                "frontendIPConfigurations": [
+                  {
+                    "name": "[format('{0}-frontend', parameters('name'))]",
+                    "properties": {
+                      "publicIPAddress": {
+                        "id": "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}-pip', parameters('name')))]"
+                      }
+                    }
+                  }
+                ],
+                "backendAddressPools": [
+                  {
+                    "name": "[format('{0}-backend', parameters('name'))]"
+                  }
+                ],
+                "loadBalancingRules": [
+                  {
+                    "name": "[format('{0}-lb-http-rule', parameters('name'))]",
+                    "properties": {
+                      "frontendIPConfiguration": {
+                        "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', format('{0}-lb', parameters('name')), format('{0}-frontend', parameters('name')))]"
+                      },
+                      "backendAddressPool": {
+                        "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', format('{0}-lb', parameters('name')), format('{0}-backend', parameters('name')))]"
+                      },
+                      "protocol": "Tcp",
+                      "frontendPort": 80,
+                      "backendPort": 80,
+                      "enableFloatingIP": false,
+                      "idleTimeoutInMinutes": 5,
+                      "disableOutboundSnat": true,
+                      "probe": {
+                        "id": "[resourceId('Microsoft.Network/loadBalancers/probes', format('{0}-lb', parameters('name')), format('{0}-probe', parameters('name')))]"
+                      }
+                    }
+                  },
+                  {
+                    "name": "[format('{0}-lb-https-rule', parameters('name'))]",
+                    "properties": {
+                      "frontendIPConfiguration": {
+                        "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', format('{0}-lb', parameters('name')), format('{0}-frontend', parameters('name')))]"
+                      },
+                      "backendAddressPool": {
+                        "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', format('{0}-lb', parameters('name')), format('{0}-backend', parameters('name')))]"
+                      },
+                      "protocol": "Tcp",
+                      "frontendPort": 443,
+                      "backendPort": 443,
+                      "enableFloatingIP": false,
+                      "idleTimeoutInMinutes": 5,
+                      "disableOutboundSnat": true,
+                      "probe": {
+                        "id": "[resourceId('Microsoft.Network/loadBalancers/probes', format('{0}-lb', parameters('name')), format('{0}-probe', parameters('name')))]"
+                      }
+                    }
+                  }
+                ],
+                "probes": [
+                  {
+                    "name": "[format('{0}-probe', parameters('name'))]",
+                    "properties": {
+                      "protocol": "Http",
+                      "port": 80,
+                      "intervalInSeconds": 5,
+                      "numberOfProbes": 2,
+                      "requestPath": "/"
+                    }
+                  }
+                ],
+                "inboundNatPools": [],
+                "outboundRules": [
+                  {
+                    "name": "[format('{0}-lb-outbound-rule', parameters('name'))]",
+                    "properties": {
+                      "allocatedOutboundPorts": 6392,
+                      "protocol": "All",
+                      "enableTcpReset": true,
+                      "idleTimeoutInMinutes": 4,
+                      "backendAddressPool": {
+                        "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', format('{0}-lb', parameters('name')), format('{0}-backend', parameters('name')))]"
+                      },
+                      "frontendIPConfigurations": [
+                        {
+                          "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', format('{0}-lb', parameters('name')), format('{0}-frontend', parameters('name')))]"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}-pip', parameters('name')))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/networkSecurityGroups",
+              "apiVersion": "2020-11-01",
+              "name": "[format('{0}-nsg', parameters('name'))]",
+              "location": "[resourceGroup().location]",
+              "properties": {
+                "securityRules": [
+                  {
+                    "name": "Http",
+                    "properties": {
+                      "protocol": "Tcp",
+                      "sourcePortRange": "*",
+                      "destinationPortRange": "80",
+                      "sourceAddressPrefix": "*",
+                      "destinationAddressPrefix": "*",
+                      "access": "Allow",
+                      "priority": 100,
+                      "direction": "Inbound"
+                    }
+                  },
+                  {
+                    "name": "Https",
+                    "properties": {
+                      "protocol": "Tcp",
+                      "sourcePortRange": "*",
+                      "destinationPortRange": "443",
+                      "sourceAddressPrefix": "*",
+                      "destinationAddressPrefix": "*",
+                      "access": "Allow",
+                      "priority": 110,
+                      "direction": "Inbound"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Microsoft.Compute/virtualMachineScaleSets",
+              "apiVersion": "2021-04-01",
+              "name": "[parameters('name')]",
+              "location": "[resourceGroup().location]",
+              "sku": {
+                "name": "[parameters('vmSku')]",
+                "capacity": "[parameters('instanceCount')]"
+              },
+              "zones": "[pickZones('Microsoft.Compute', 'virtualMachines', resourceGroup().location, 2)]",
+              "identity": {
+                "type": "SystemAssigned"
+              },
+              "properties": {
+                "overprovision": true,
+                "upgradePolicy": {
+                  "mode": "Manual"
+                },
+                "scaleInPolicy": {
+                  "rules": [
+                    "OldestVM"
+                  ]
+                },
+                "virtualMachineProfile": {
+                  "storageProfile": {
+                    "osDisk": {
+                      "createOption": "FromImage",
+                      "caching": "ReadWrite",
+                      "managedDisk": {
+                        "storageAccountType": "StandardSSD_LRS"
+                      },
+                      "diskSizeGB": "[parameters('diskSize')]"
+                    },
+                    "imageReference": {
+                      "publisher": "MicrosoftWindowsServer",
+                      "offer": "WindowsServer",
+                      "sku": "2019-datacenter-gensecond",
+                      "version": "latest"
+                    }
+                  },
+                  "osProfile": {
+                    "computerNamePrefix": "[parameters('vmPrefix')]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]",
+                    "windowsConfiguration": {
+                      "provisionVMAgent": true,
+                      "enableAutomaticUpdates": true
+                    }
+                  },
+                  "networkProfile": {
+                    "networkInterfaceConfigurations": [
+                      {
+                        "name": "[format('{0}-nic', parameters('name'))]",
+                        "properties": {
+                          "primary": true,
+                          "ipConfigurations": [
+                            {
+                              "name": "ipconfig",
+                              "properties": {
+                                "subnet": {
+                                  "id": "[resourceId(parameters('vnetRGName'), 'Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('subnetName'))]"
+                                },
+                                "loadBalancerBackendAddressPools": [
+                                  {
+                                    "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', format('{0}-lb', parameters('name')), format('{0}-backend', parameters('name')))]"
+                                  }
+                                ],
+                                "loadBalancerInboundNatPools": []
+                              }
+                            }
+                          ],
+                          "networkSecurityGroup": {
+                            "id": "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-nsg', parameters('name')))]"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                      "enabled": true
+                    }
+                  },
+                  "extensionProfile": {
+                    "extensions": [
+                      {
+                        "name": "CustomScriptExtension",
+                        "properties": {
+                          "publisher": "Microsoft.Compute",
+                          "type": "CustomScriptExtension",
+                          "typeHandlerVersion": "1.10",
+                          "autoUpgradeMinorVersion": true,
+                          "protectedSettings": {
+                            "fileUris": [
+                              "https://raw.githubusercontent.com/iwate/saburaiis/main/scripts/provisioning.ps1",
+                              "[parameters('customScriptUrl')]"
+                            ],
+                            "commandToExecute": "[format('powershell -ExecutionPolicy Unrestricted -File provisioning.ps1 -ScaleSetName {0} -SubscriptionId {1} -ResourceGroupName {2} && {3}', parameters('name'), subscription().subscriptionId, parameters('saburaiisCoreName'), parameters('customScriptCommand'))]"
+                          }
+                        }
+                      },
+                      {
+                        "name": "HealthExtension",
+                        "properties": {
+                          "autoUpgradeMinorVersion": true,
+                          "publisher": "Microsoft.ManagedServices",
+                          "type": "ApplicationHealthWindows",
+                          "typeHandlerVersion": "1.0",
+                          "settings": {
+                            "protocol": "http",
+                            "port": 80,
+                            "requestPath": "/"
+                          }
+                        }
+                      },
+                      {
+                        "name": "MonitoringExtension",
+                        "properties": {
+                          "autoUpgradeMinorVersion": true,
+                          "publisher": "Microsoft.EnterpriseCloud.Monitoring",
+                          "type": "MicrosoftMonitoringAgent",
+                          "typeHandlerVersion": "1.0",
+                          "settings": {
+                            "workspaceId": "[parameters('workspaceId')]"
+                          },
+                          "protectedSettings": {
+                            "workspaceKey": "[parameters('workspaceKey')]"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/loadBalancers', format('{0}-lb', parameters('name')))]",
+                "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-nsg', parameters('name')))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "principalId": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('name')), '2021-04-01', 'full').identity.principalId]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('coreName')), 'Microsoft.Resources/deployments', 'coreDeploy')]",
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', format('{0}-network', parameters('coreName')))]",
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('partitionName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "assignRolesDeploy",
+      "resourceGroup": "[parameters('coreName')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "principalId": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('partitionName')), 'Microsoft.Resources/deployments', 'partitionDeploy'), '2019-10-01').outputs.principalId.value]"
+          },
+          "cosmosdbName": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('coreName')), 'Microsoft.Resources/deployments', 'coreDeploy'), '2019-10-01').outputs.cosmosdbName.value]"
+          },
+          "keyvaultName": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('coreName')), 'Microsoft.Resources/deployments', 'coreDeploy'), '2019-10-01').outputs.keyvaultName.value]"
+          },
+          "packageContainerName": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('coreName')), 'Microsoft.Resources/deployments', 'coreDeploy'), '2019-10-01').outputs.packageContainerName.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.4.613.9944",
+              "templateHash": "9895630756136325812"
+            }
+          },
+          "parameters": {
+            "principalId": {
+              "type": "string"
+            },
+            "cosmosdbName": {
+              "type": "string"
+            },
+            "keyvaultName": {
+              "type": "string"
+            },
+            "packageContainerName": {
+              "type": "string"
+            }
+          },
+          "functions": [],
+          "resources": [
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2020-08-01-preview",
+              "scope": "[format('Microsoft.KeyVault/vaults/{0}', parameters('keyvaultName'))]",
+              "name": "[guid('21090545-7ca7-4776-b22c-e363652d74d2', parameters('principalId'), resourceId('Microsoft.KeyVault/vaults', parameters('keyvaultName')))]",
+              "properties": {
+                "principalId": "[parameters('principalId')]",
+                "principalType": "ServicePrincipal",
+                "roleDefinitionId": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/21090545-7ca7-4776-b22c-e363652d74d2', subscription().subscriptionId)]"
+              }
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2020-08-01-preview",
+              "scope": "[format('Microsoft.KeyVault/vaults/{0}', parameters('keyvaultName'))]",
+              "name": "[guid('4633458b-17de-408a-b874-0445c86b69e6', parameters('principalId'), resourceId('Microsoft.KeyVault/vaults', parameters('keyvaultName')))]",
+              "properties": {
+                "principalId": "[parameters('principalId')]",
+                "principalType": "ServicePrincipal",
+                "roleDefinitionId": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/4633458b-17de-408a-b874-0445c86b69e6', subscription().subscriptionId)]"
+              }
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2020-08-01-preview",
+              "scope": "[format('Microsoft.Storage/storageAccounts/{0}/blobServices/{1}/containers/{2}', split(parameters('packageContainerName'), '/')[0], split(parameters('packageContainerName'), '/')[1], split(parameters('packageContainerName'), '/')[2])]",
+              "name": "[guid('ba92f5b4-2d11-453d-a403-e96b0029c9fe', parameters('principalId'), resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', split(parameters('packageContainerName'), '/')[0], split(parameters('packageContainerName'), '/')[1], split(parameters('packageContainerName'), '/')[2]))]",
+              "properties": {
+                "principalId": "[parameters('principalId')]",
+                "principalType": "ServicePrincipal",
+                "roleDefinitionId": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe', subscription().subscriptionId)]"
+              }
+            },
+            {
+              "type": "Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments",
+              "apiVersion": "2021-06-15",
+              "name": "[format('{0}/{1}', parameters('cosmosdbName'), guid('00000000-0000-0000-0000-000000000002', parameters('principalId'), resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosdbName'))))]",
+              "properties": {
+                "scope": "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosdbName'))]",
+                "principalId": "[parameters('principalId')]",
+                "roleDefinitionId": "[format('/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.DocumentDB/databaseAccounts/{2}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002', subscription().subscriptionId, resourceGroup().name, parameters('cosmosdbName'))]"
+              }
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2020-08-01-preview",
+              "scope": "[format('Microsoft.DocumentDB/databaseAccounts/{0}', parameters('cosmosdbName'))]",
+              "name": "[guid('5e66d809-b24f-46a8-bc5d-141bd610c09a', parameters('principalId'), resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosdbName')))]",
+              "properties": {
+                "principalId": "[parameters('principalId')]",
+                "principalType": "ServicePrincipal",
+                "roleDefinitionId": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/5e66d809-b24f-46a8-bc5d-141bd610c09a', subscription().subscriptionId)]"
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('coreName')), 'Microsoft.Resources/deployments', 'coreDeploy')]",
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('coreName'))]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('partitionName')), 'Microsoft.Resources/deployments', 'partitionDeploy')]"
+      ]
+    }
+  ]
+}

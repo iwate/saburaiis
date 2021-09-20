@@ -177,6 +177,8 @@ resource cosmosdbDataContributor 'Microsoft.DocumentDB/databaseAccounts/sqlRoleA
   ]
 }
 
+output cosmosdbName string = cosmosdb.name
+
 resource keyvault 'Microsoft.KeyVault/vaults@2021-04-01-preview' = {
   name: name
   location: resourceGroup().location
@@ -195,6 +197,8 @@ resource keyvault 'Microsoft.KeyVault/vaults@2021-04-01-preview' = {
     enableRbacAuthorization: true
   }
 }
+
+output keyvaultName string = keyvault.name
 
 resource keyvaultReader 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
   name: guid('21090545-7ca7-4776-b22c-e363652d74d2', principalId, keyvault.id)
@@ -238,15 +242,50 @@ resource packagesContainer 'Microsoft.Storage/storageAccounts/blobServices/conta
   ]
 }
 
+output packageContainerName string = packagesContainer.name
+
 resource storageBlobDataContributor 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
-  name: guid('ba92f5b4-2d11-453d-a403-e96b0029c9fe', principalId, keyvault.id)
-  scope: keyvault
+  name: guid('ba92f5b4-2d11-453d-a403-e96b0029c9fe', principalId, packagesContainer.id)
+  scope: packagesContainer
   properties: {
     principalId: principalId
     principalType: 'ServicePrincipal'
     roleDefinitionId: '/subscriptions/${subscription().subscriptionId}/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe'
   }
   dependsOn: [
-    storage
+    packagesContainer
   ]
 }
+
+resource cosmosdbListKeysRole 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' = {
+  name: '5e66d809-b24f-46a8-bc5d-141bd610c09a'
+  properties: {
+    roleName: 'DocumentDB Keys Accessor'
+    description: 'List keys of assigned DocumentDBs'
+    type: 'customRole'
+    permissions: [
+      {
+        actions: [
+          'Microsoft.DocumentDB/databaseAccounts/listKeys/action'
+        ]
+      }
+    ]
+    assignableScopes:[
+      '${subscription().id}/resourceGroups/${resourceGroup().name}'
+    ]
+  }
+}
+
+resource workspace 'Microsoft.OperationalInsights/workspaces@2021-06-01' = {
+  name: name
+  location: resourceGroup().location
+  properties: {
+    sku: {
+      name: 'PerGB2018'
+    }
+    retentionInDays: 30
+  }
+}
+
+output workspaceId string = workspace.properties.customerId
+output workspaceKey string = workspace.listKeys().primarySharedKey

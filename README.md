@@ -26,8 +26,18 @@ $ az ad sp show --query objectId --id nnnnnnnn-nnnn-nnnn-nnnn-nnnnnnnnnnnn
 "oooooooo-oooo-oooo-oooo-oooooooooooo"
 ```
 
-### Step 2 - Deploy SaburaIIS Core resources.
+### Step 2 - Deploy Resources
 
-Create core resources (cosmodb, keyvault and storage) of SaburaIIS.
+Create core resources (CosmoDB, KeyVault, Storage), vnet and a partition (VMSS, PIP, LB, NSG)
 
 [![Deploy To Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fiwate%2Fsaburaiis%2Fmaster%2Fdeployment%2Fcore.json)
+
+### Step 3 - Deploy SaburaIIS Partition(VMSS)
+
+Create a new partition resource.
+
+[![Deploy To Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fiwate%2Fsaburaiis%2Fmaster%2Fdeployment%2Fpartition.json)
+
+
+### Step 4 - Assign IAM Roles
+[![Deploy To Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fiwate%2Fsaburaiis%2Fmaster%2Fdeployment%2Fiam.json)

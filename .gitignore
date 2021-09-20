@@ -396,4 +396,5 @@ FodyWeavers.xsd
 launchSettings.json
 appsettings.Development.json
 
-# End of https://www.toptal.com/developers/gitignore/api/csharp
+# Bicep
+deployment/*.params.json

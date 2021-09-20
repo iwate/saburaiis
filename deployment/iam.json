@@ -1,0 +1,82 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.4.613.9944",
+      "templateHash": "9895630756136325812"
+    }
+  },
+  "parameters": {
+    "principalId": {
+      "type": "string"
+    },
+    "cosmosdbName": {
+      "type": "string"
+    },
+    "keyvaultName": {
+      "type": "string"
+    },
+    "packageContainerName": {
+      "type": "string"
+    }
+  },
+  "functions": [],
+  "resources": [
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2020-08-01-preview",
+      "scope": "[format('Microsoft.KeyVault/vaults/{0}', parameters('keyvaultName'))]",
+      "name": "[guid('21090545-7ca7-4776-b22c-e363652d74d2', parameters('principalId'), resourceId('Microsoft.KeyVault/vaults', parameters('keyvaultName')))]",
+      "properties": {
+        "principalId": "[parameters('principalId')]",
+        "principalType": "ServicePrincipal",
+        "roleDefinitionId": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/21090545-7ca7-4776-b22c-e363652d74d2', subscription().subscriptionId)]"
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2020-08-01-preview",
+      "scope": "[format('Microsoft.KeyVault/vaults/{0}', parameters('keyvaultName'))]",
+      "name": "[guid('4633458b-17de-408a-b874-0445c86b69e6', parameters('principalId'), resourceId('Microsoft.KeyVault/vaults', parameters('keyvaultName')))]",
+      "properties": {
+        "principalId": "[parameters('principalId')]",
+        "principalType": "ServicePrincipal",
+        "roleDefinitionId": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/4633458b-17de-408a-b874-0445c86b69e6', subscription().subscriptionId)]"
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2020-08-01-preview",
+      "scope": "[format('Microsoft.Storage/storageAccounts/{0}/blobServices/{1}/containers/{2}', split(parameters('packageContainerName'), '/')[0], split(parameters('packageContainerName'), '/')[1], split(parameters('packageContainerName'), '/')[2])]",
+      "name": "[guid('ba92f5b4-2d11-453d-a403-e96b0029c9fe', parameters('principalId'), resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', split(parameters('packageContainerName'), '/')[0], split(parameters('packageContainerName'), '/')[1], split(parameters('packageContainerName'), '/')[2]))]",
+      "properties": {
+        "principalId": "[parameters('principalId')]",
+        "principalType": "ServicePrincipal",
+        "roleDefinitionId": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe', subscription().subscriptionId)]"
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments",
+      "apiVersion": "2021-06-15",
+      "name": "[format('{0}/{1}', parameters('cosmosdbName'), guid('00000000-0000-0000-0000-000000000002', parameters('principalId'), resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosdbName'))))]",
+      "properties": {
+        "scope": "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosdbName'))]",
+        "principalId": "[parameters('principalId')]",
+        "roleDefinitionId": "[format('/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.DocumentDB/databaseAccounts/{2}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002', subscription().subscriptionId, resourceGroup().name, parameters('cosmosdbName'))]"
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2020-08-01-preview",
+      "scope": "[format('Microsoft.DocumentDB/databaseAccounts/{0}', parameters('cosmosdbName'))]",
+      "name": "[guid('5e66d809-b24f-46a8-bc5d-141bd610c09a', parameters('principalId'), resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosdbName')))]",
+      "properties": {
+        "principalId": "[parameters('principalId')]",
+        "principalType": "ServicePrincipal",
+        "roleDefinitionId": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/5e66d809-b24f-46a8-bc5d-141bd610c09a', subscription().subscriptionId)]"
+      }
+    }
+  ]
+}
