@@ -112,7 +112,7 @@ Execute SaburaIIS.WebAdmin.exe and access https://localhost:5001/ on your browse
 ### Step 4 Create Partition settings on WebAdmin
 
 Click `New Partition` button and input new partition name, finaly click the `Create` button.
-![image](https://user-images.githubusercontent.com/1011232/134100077-031f53d4-d614-4ae7-9589-0e7c562364a4.png)
+![image](https://user-images.githubusercontent.com/1011232/134123773-4f55b905-8672-407a-8056-fc64e92df50d.png)
 
 ### Step 5 Participate VMSS in the Partition
 
@@ -121,15 +121,15 @@ Click `New Partition` button and input new partition name, finaly click the `Cre
 1. Input VMSS name which created in step 2
 1. Stage changes
 
-![image](https://user-images.githubusercontent.com/1011232/134106740-cc98b4b3-8a4c-4d3f-b2bc-f7d1184065f6.png)
+![image](https://user-images.githubusercontent.com/1011232/134123920-3822c5cb-6f33-4a05-bb87-ac4ab6472492.png)
 
 Check current changes and apply it.
 
-![image](https://user-images.githubusercontent.com/1011232/134106859-1818cac7-372f-413d-85df-5e71ba5524f0.png)
+![image](https://user-images.githubusercontent.com/1011232/134124082-b9e8ef4e-9a35-406f-9d20-708e5db76825.png)
 
 Navigate to `Instances` and wait active instances
 
-![image](https://user-images.githubusercontent.com/1011232/134114191-9059a3f1-ff5a-41fb-b918-36060b804790.png)
+![image](https://user-images.githubusercontent.com/1011232/134124285-4e7226da-4f0f-4b02-a4d7-cb325ab4ca71.png)
 
 ### Step 6 - Setup CLI
 
