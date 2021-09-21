@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "4834704656100626906"
+      "templateHash": "15794343547521748194"
     }
   },
   "parameters": {
@@ -316,6 +316,29 @@
         },
         "retentionInDays": 30
       }
+    },
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/dataSources",
+      "apiVersion": "2020-08-01",
+      "name": "[format('{0}/WindowsEventsApplication', parameters('name'))]",
+      "kind": "WindowsEvent",
+      "properties": {
+        "eventLogName": "Application",
+        "eventTypes": [
+          {
+            "eventType": "Error"
+          },
+          {
+            "eventType": "Warning"
+          },
+          {
+            "eventType": "Information"
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('name'))]"
+      ]
     }
   ],
   "outputs": {

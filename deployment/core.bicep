@@ -287,5 +287,27 @@ resource workspace 'Microsoft.OperationalInsights/workspaces@2021-06-01' = {
   }
 }
 
+resource datasource 'Microsoft.OperationalInsights/workspaces/dataSources@2020-08-01' = {
+  name: '${name}/WindowsEventsApplication'
+  kind: 'WindowsEvent'
+  properties: {
+    eventLogName: 'Application'
+    eventTypes: [
+      {
+        eventType: 'Error'
+      }
+      {
+        eventType: 'Warning'
+      }
+      {
+        eventType: 'Information'
+      }
+    ]
+  }
+  dependsOn:[
+    workspace
+  ]
+}
+
 output workspaceId string = workspace.properties.customerId
 output workspaceKey string = workspace.listKeys().primarySharedKey
