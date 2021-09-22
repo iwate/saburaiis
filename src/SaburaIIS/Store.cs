@@ -168,9 +168,11 @@ namespace SaburaIIS
             return result;
         }
 
-        public virtual async Task<Release> GetReleaseAsync(string name, string version)
+        public virtual async Task<Release> GetReleaseAsync(string packageName, string version)
         {
-            var query = new QueryDefinition("SELECT VALUE(r) FROM T JOIN r IN T.Releases WHERE r.Version = @version").WithParameter("@version", version);
+            var query = new QueryDefinition("SELECT VALUE(r) FROM T JOIN r IN T.Releases WHERE T.Name = @name AND r.Version = @version")
+                                .WithParameter("@name", packageName)
+                                .WithParameter("@version", version);
             using var feedIterator = _packages.GetItemQueryIterator<Release>(query);
             while (feedIterator.HasMoreResults)
             {
