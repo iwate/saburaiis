@@ -6,7 +6,6 @@ import {
   managedPipelineModeOptions,
   startModeOptions,
   managedRuntimeVersionOptions,
-  objectStateOptions,
   actionOptions,
   loadBalancerCapabilitiesOptions,
   identityTypeOptions,
