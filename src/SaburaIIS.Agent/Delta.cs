@@ -77,6 +77,7 @@ namespace SaburaIIS.Agent
         private static PropertyInfo[] _ignores = new[] { 
             typeof(POCO.ApplicationPool).GetProperty(nameof(POCO.ApplicationPool.State))!,
             typeof(POCO.ApplicationPool).GetProperty(nameof(POCO.ApplicationPool.WorkerProcesses))!,
+            typeof(POCO.ApplicationPool).GetProperty(nameof(POCO.ApplicationPool.RecycleRequestAt))!,
             typeof(POCO.Site).GetProperty(nameof(POCO.Site.Id))!,
             typeof(POCO.Site).GetProperty(nameof(POCO.Site.State))!,
         };
