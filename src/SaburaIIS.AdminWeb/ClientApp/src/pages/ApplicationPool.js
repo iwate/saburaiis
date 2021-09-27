@@ -73,7 +73,6 @@ export const ApplicationPool = () => {
 
 
   const onSubmit = (data) => {
-    console.log(data)
     setLocal(data);
     browserHistory.push(`/partitions/${partitionName}`);
   }
@@ -101,13 +100,26 @@ export const ApplicationPool = () => {
       iconProps: { iconName: 'Undo' },
       disabled: !hasDiff,
       onClick: () => setLocal(origin),
+    },
+    {
+      key: 'recycle',
+      text: 'Recycle',
+      iconProps: { iconName: 'Refresh' },
+      disabled: isDirty,
+      onClick: () => {
+        setLocal({
+          ...local, recycleRequestAt: new Date().toISOString()
+        });
+        browserHistory.push(`/partitions/${partitionName}`);
+      },
     }
   ]
   return <Stack style={{ width: '100%' }}>
     <CommandBar items={commands} style={{ borderBottom: '1px solid #eee', paddingBottom: 4 }} />
     <Stack tokens={{ childrenGap: 8, padding: 16 }} style={{ width: '100%', overflowY: 'auto' }}>
       <TextField label="Name" value={local.name} readOnly />
-      <TextField label="State" value={objectStateOptions.find(item => item.key === local.state)?.text} readOnly />
+      <DefaultValueController name="state" control={control} />
+      <DefaultValueController name="recycleRequestAt" control={control} />
       <DropdownController
         label="Managed Pipeline Mode"
         name="managedPipelineMode"

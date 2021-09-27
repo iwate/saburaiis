@@ -21,6 +21,9 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Poco.tt</DependentUpon>
     </Compile>
+    <Compile Update="PocoPartials.cs">
+      <DependentUpon>Poco.tt</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
