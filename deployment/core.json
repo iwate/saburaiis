@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "15794343547521748194"
+      "templateHash": "15879830585128031423"
     }
   },
   "parameters": {
@@ -33,7 +33,8 @@
         "databaseAccountOfferType": "Standard",
         "locations": [
           {
-            "locationName": "[resourceGroup().location]"
+            "locationName": "[resourceGroup().location]",
+            "isZoneRedundant": true
           }
         ]
       }
@@ -254,6 +255,31 @@
       ]
     },
     {
+      "type": "Microsoft.AppConfiguration/configurationStores",
+      "apiVersion": "2021-03-01-preview",
+      "name": "[parameters('name')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "free"
+      },
+      "properties": {}
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2020-08-01-preview",
+      "scope": "[format('Microsoft.KeyVault/vaults/{0}', parameters('name'))]",
+      "name": "[guid('516239f1-63e1-4d78-a4de-a74fb236a071', parameters('principalId'), resourceId('Microsoft.KeyVault/vaults', parameters('name')))]",
+      "properties": {
+        "principalId": "[parameters('principalId')]",
+        "principalType": "ServicePrincipal",
+        "roleDefinitionId": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/516239f1-63e1-4d78-a4de-a74fb236a071', subscription().subscriptionId)]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.AppConfiguration/configurationStores', parameters('name'))]",
+        "[resourceId('Microsoft.KeyVault/vaults', parameters('name'))]"
+      ]
+    },
+    {
       "type": "Microsoft.Storage/storageAccounts",
       "apiVersion": "2021-04-01",
       "name": "[parameters('name')]",
@@ -347,6 +373,10 @@
       "value": "[parameters('name')]"
     },
     "keyvaultName": {
+      "type": "string",
+      "value": "[parameters('name')]"
+    },
+    "appConfigName": {
       "type": "string",
       "value": "[parameters('name')]"
     },

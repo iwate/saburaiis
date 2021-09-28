@@ -1,6 +1,7 @@
 param principalId string
 param cosmosdbName string
 param keyvaultName string
+param appConfigName string
 param packageContainerName string
 
 resource keyvault 'Microsoft.KeyVault/vaults@2021-04-01-preview' existing = {
@@ -76,5 +77,23 @@ resource cosmosdbListKeysReader 'Microsoft.Authorization/roleAssignments@2020-08
   }
   dependsOn:[
     cosmosdb
+  ]
+}
+
+
+resource appConfig 'Microsoft.AppConfiguration/configurationStores@2021-03-01-preview' existing = {
+  name: appConfigName
+}
+
+resource appConfigDataReader 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
+  name: guid('516239f1-63e1-4d78-a4de-a74fb236a071', principalId, keyvault.id)
+  scope: appConfig
+  properties: {
+    principalId: principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: '/subscriptions/${subscription().subscriptionId}/providers/Microsoft.Authorization/roleDefinitions/516239f1-63e1-4d78-a4de-a74fb236a071'
+  }
+  dependsOn: [
+    appConfig
   ]
 }

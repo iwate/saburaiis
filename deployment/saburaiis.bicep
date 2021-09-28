@@ -450,11 +450,17 @@ module core './core.bicep' = {
     principalId: principalId
     cosmosdbEnableFreeTier: cosmosdbEnableFreeTier
   }
+  dependsOn:[
+    coreRG
+  ]
 }
 
 resource networkRG 'Microsoft.Resources/resourceGroups@2021-04-01' = if (!biringVNet) {
   name: '${coreName}-network'
   location: location
+  dependsOn:[
+    core
+  ]
 }
 
 module network 'network.bicep' = if (!biringVNet) {
@@ -464,11 +470,17 @@ module network 'network.bicep' = if (!biringVNet) {
     vnetName: vnetName
     subnetName: partitionName
   }
+  dependsOn: [
+    networkRG
+  ]
 }
 
 resource partitionRG 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: partitionName
   location: location
+  dependsOn:[
+    core
+  ]
 }
 
 module vmss 'partition.bicep' = {
@@ -489,6 +501,7 @@ module vmss 'partition.bicep' = {
     workspaceKey: core.outputs.workspaceKey
   }
   dependsOn:[
+    partitionRG
     core
   ]
 }
@@ -500,6 +513,7 @@ module iam 'iam.bicep' = {
     principalId: vmss.outputs.principalId
     cosmosdbName: core.outputs.cosmosdbName
     keyvaultName: core.outputs.keyvaultName
+    appConfigName: core.outputs.appConfigName
     packageContainerName: core.outputs.packageContainerName
   }
   dependsOn: [

@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "9895630756136325812"
+      "templateHash": "8860374498571542895"
     }
   },
   "parameters": {
@@ -16,6 +16,9 @@
       "type": "string"
     },
     "keyvaultName": {
+      "type": "string"
+    },
+    "appConfigName": {
       "type": "string"
     },
     "packageContainerName": {
@@ -76,6 +79,17 @@
         "principalId": "[parameters('principalId')]",
         "principalType": "ServicePrincipal",
         "roleDefinitionId": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/5e66d809-b24f-46a8-bc5d-141bd610c09a', subscription().subscriptionId)]"
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2020-08-01-preview",
+      "scope": "[format('Microsoft.AppConfiguration/configurationStores/{0}', parameters('appConfigName'))]",
+      "name": "[guid('516239f1-63e1-4d78-a4de-a74fb236a071', parameters('principalId'), resourceId('Microsoft.KeyVault/vaults', parameters('keyvaultName')))]",
+      "properties": {
+        "principalId": "[parameters('principalId')]",
+        "principalType": "ServicePrincipal",
+        "roleDefinitionId": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/516239f1-63e1-4d78-a4de-a74fb236a071', subscription().subscriptionId)]"
       }
     }
   ]

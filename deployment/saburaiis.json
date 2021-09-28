@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "5179149322519795954"
+      "templateHash": "13574483114551812530"
     }
   },
   "parameters": {
@@ -473,13 +473,19 @@
       "type": "Microsoft.Resources/resourceGroups",
       "apiVersion": "2021-04-01",
       "name": "[format('{0}-network', parameters('coreName'))]",
-      "location": "[variables('location')]"
+      "location": "[variables('location')]",
+      "dependsOn": [
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('coreName')), 'Microsoft.Resources/deployments', 'coreDeploy')]"
+      ]
     },
     {
       "type": "Microsoft.Resources/resourceGroups",
       "apiVersion": "2021-04-01",
       "name": "[parameters('partitionName')]",
-      "location": "[variables('location')]"
+      "location": "[variables('location')]",
+      "dependsOn": [
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('coreName')), 'Microsoft.Resources/deployments', 'coreDeploy')]"
+      ]
     },
     {
       "type": "Microsoft.Resources/deployments",
@@ -509,7 +515,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.613.9944",
-              "templateHash": "4834704656100626906"
+              "templateHash": "7303971501416894991"
             }
           },
           "parameters": {
@@ -758,6 +764,31 @@
               ]
             },
             {
+              "type": "Microsoft.AppConfiguration/configurationStores",
+              "apiVersion": "2021-03-01-preview",
+              "name": "[parameters('name')]",
+              "location": "[resourceGroup().location]",
+              "sku": {
+                "name": "free"
+              },
+              "properties": {}
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2020-08-01-preview",
+              "scope": "[format('Microsoft.KeyVault/vaults/{0}', parameters('name'))]",
+              "name": "[guid('516239f1-63e1-4d78-a4de-a74fb236a071', parameters('principalId'), resourceId('Microsoft.KeyVault/vaults', parameters('name')))]",
+              "properties": {
+                "principalId": "[parameters('principalId')]",
+                "principalType": "ServicePrincipal",
+                "roleDefinitionId": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/516239f1-63e1-4d78-a4de-a74fb236a071', subscription().subscriptionId)]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.AppConfiguration/configurationStores', parameters('name'))]",
+                "[resourceId('Microsoft.KeyVault/vaults', parameters('name'))]"
+              ]
+            },
+            {
               "type": "Microsoft.Storage/storageAccounts",
               "apiVersion": "2021-04-01",
               "name": "[parameters('name')]",
@@ -820,6 +851,29 @@
                 },
                 "retentionInDays": 30
               }
+            },
+            {
+              "type": "Microsoft.OperationalInsights/workspaces/dataSources",
+              "apiVersion": "2020-08-01",
+              "name": "[format('{0}/WindowsEventsApplication', parameters('name'))]",
+              "kind": "WindowsEvent",
+              "properties": {
+                "eventLogName": "Application",
+                "eventTypes": [
+                  {
+                    "eventType": "Error"
+                  },
+                  {
+                    "eventType": "Warning"
+                  },
+                  {
+                    "eventType": "Information"
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('name'))]"
+              ]
             }
           ],
           "outputs": {
@@ -828,6 +882,10 @@
               "value": "[parameters('name')]"
             },
             "keyvaultName": {
+              "type": "string",
+              "value": "[parameters('name')]"
+            },
+            "appConfigName": {
               "type": "string",
               "value": "[parameters('name')]"
             },
@@ -1779,6 +1837,9 @@
           "keyvaultName": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('coreName')), 'Microsoft.Resources/deployments', 'coreDeploy'), '2019-10-01').outputs.keyvaultName.value]"
           },
+          "appConfigName": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('coreName')), 'Microsoft.Resources/deployments', 'coreDeploy'), '2019-10-01').outputs.appConfigName.value]"
+          },
           "packageContainerName": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('coreName')), 'Microsoft.Resources/deployments', 'coreDeploy'), '2019-10-01').outputs.packageContainerName.value]"
           }
@@ -1790,7 +1851,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.613.9944",
-              "templateHash": "9895630756136325812"
+              "templateHash": "8860374498571542895"
             }
           },
           "parameters": {
@@ -1801,6 +1862,9 @@
               "type": "string"
             },
             "keyvaultName": {
+              "type": "string"
+            },
+            "appConfigName": {
               "type": "string"
             },
             "packageContainerName": {
@@ -1861,6 +1925,17 @@
                 "principalId": "[parameters('principalId')]",
                 "principalType": "ServicePrincipal",
                 "roleDefinitionId": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/5e66d809-b24f-46a8-bc5d-141bd610c09a', subscription().subscriptionId)]"
+              }
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2020-08-01-preview",
+              "scope": "[format('Microsoft.AppConfiguration/configurationStores/{0}', parameters('appConfigName'))]",
+              "name": "[guid('516239f1-63e1-4d78-a4de-a74fb236a071', parameters('principalId'), resourceId('Microsoft.KeyVault/vaults', parameters('keyvaultName')))]",
+              "properties": {
+                "principalId": "[parameters('principalId')]",
+                "principalType": "ServicePrincipal",
+                "roleDefinitionId": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/516239f1-63e1-4d78-a4de-a74fb236a071', subscription().subscriptionId)]"
               }
             }
           ]

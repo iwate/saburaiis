@@ -15,6 +15,7 @@ resource cosmosdb 'Microsoft.DocumentDB/databaseAccounts@2021-06-15' = {
     locations: [
       {
         locationName: resourceGroup().location
+        isZoneRedundant: true
       }
     ]
   }
@@ -223,6 +224,31 @@ resource keyvaultSecretsUser 'Microsoft.Authorization/roleAssignments@2020-08-01
   }
   dependsOn: [
     keyvault
+  ]
+}
+
+resource appConfig 'Microsoft.AppConfiguration/configurationStores@2021-03-01-preview' = {
+  name: name
+  location: resourceGroup().location
+  sku: {
+    name: 'free'
+  }
+  properties: {
+  }
+}
+
+output appConfigName string = appConfig.name
+
+resource appConfigDataReader 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
+  name: guid('516239f1-63e1-4d78-a4de-a74fb236a071', principalId, keyvault.id)
+  scope: keyvault
+  properties: {
+    principalId: principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: '/subscriptions/${subscription().subscriptionId}/providers/Microsoft.Authorization/roleDefinitions/516239f1-63e1-4d78-a4de-a74fb236a071'
+  }
+  dependsOn: [
+    appConfig
   ]
 }
 
