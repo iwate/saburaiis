@@ -11,18 +11,28 @@ namespace SaburaIIS.Agent.Transformers
 
             if (delta.Method == DeltaMethod.Add)
             {
-                var app = colleciton.Add((string?)delta.Key, string.Empty);
-                Transformer.Transform(app, delta);
+                var path = (string?)delta.Key;
+                if (path == "/")
+                {
+                    var vdir = colleciton.First(item => item.Path == path);
+                    Transformer.Transform(vdir, delta);
+                }
+                else
+                {
+                    var physicalPath = (string?)delta.ValueProperties[nameof(POCO.VirtualDirectory.PhysicalPath)].newValue;
+                    var vdir = colleciton.Add(path, physicalPath);
+                    Transformer.Transform(vdir, delta);
+                }
             }
             else if (delta.Method == DeltaMethod.Remove)
             {
-                var app = colleciton.First(item => item.Path == (string?)delta.Key);
-                colleciton.Remove(app);
+                var vdir = colleciton.First(item => item.Path == (string?)delta.Key);
+                colleciton.Remove(vdir);
             }
             else if (delta.Method == DeltaMethod.Update)
             {
-                var app = colleciton.First(item => item.Path == (string?)delta.Key);
-                Transformer.Transform(app, delta);
+                var vdir = colleciton.First(item => item.Path == (string?)delta.Key);
+                Transformer.Transform(vdir, delta);
             }
         }
     }
