@@ -6,7 +6,7 @@ const originState = selectorFamily({
   key: 'origin/applicationPools',
   get: ({partitionName}) => ({get}) => {
     const partition = get(partitionOrigin({partitionName}));
-    return partition?.applicationPools.map(ap => ap.Name);
+    return partition?.applicationPools.map(ap => ap.name);
   }
 })
 
@@ -14,7 +14,7 @@ const localState = selectorFamily({
   key: 'local/applicationPools',
   get: ({partitionName}) => ({get}) => {
     const partition = get(partitionLocal({partitionName}));
-    return partition?.applicationPools.map(ap => ap.Name);
+    return partition?.applicationPools.map(ap => ap.name);
   }
 })
 
