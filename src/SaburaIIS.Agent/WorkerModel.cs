@@ -107,12 +107,12 @@ namespace SaburaIIS.Agent
                     }
                 }
 
-                var first = true;
+                var changed = true;
                 while (!stoppingToken.IsCancellationRequested)
                 {
                     try
                     {
-                        if (!first && !await _tracker!.HasChangeAsync())
+                        if (!changed && !(changed = await _tracker!.HasChangeAsync()))
                             continue;
 
                         var (partition, etag) = await _store.GetPartitionAsync(partitionName);
@@ -124,7 +124,7 @@ namespace SaburaIIS.Agent
 
                         await Update(partition);
 
-                        first = false;
+                        changed = false;
                     }
                     catch (Exception ex)
                     {
