@@ -38,7 +38,7 @@ export const Instances = () => {
         }, []))
       }, []))
     }, []));
-  }, [setInstances, partitionName])
+  }, [setInstances, partitionName, origin])
 
   useEffect(() => {
     loadInstances();
