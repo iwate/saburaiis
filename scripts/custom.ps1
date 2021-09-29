@@ -5,6 +5,10 @@ param(
 )
 $ErrorActionPreference = "Stop"
 
+# Install aspnet45
+
+Install-WindowsFeature -Name Web-Asp-Net45 -IncludeManagementTools
+
 # Install dotnet core hosting bundle
 $DotNetCoreInstaller = "$env:temp\dotnetcore-installer.exe";
 Invoke-RestMethod -Method Get -Uri $DotNetCoreDownloadLink -OutFile $DotNetCoreInstaller
