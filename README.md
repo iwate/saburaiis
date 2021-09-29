@@ -27,11 +27,13 @@ Cosmos Db has a data what applicationHost.config should be. And saburaiis agents
 
 ## Architecture
 
-![image](https://user-images.githubusercontent.com/1011232/134033034-d72cd163-fcda-41f8-acdd-1af2a5f5f5bf.png)
+![saburaiis-Page-2](https://user-images.githubusercontent.com/1011232/135226302-ca580d75-5759-4770-961a-a557795f0a22.jpg)
+
 
 - Cosmos DB: Store data what IIS should be.
 - Storage: Store applciation package(zip).
 - Key Vault: Manage SSL certificate.
+- App Configuration: Manage environment variables for Application Pool.
 - Log Analytics: Monitoring saburaiis agent logs.
 - Partition(VMSSs): Worker group. Partition has a few VMSS.
 - SaburaIIS Agent: Update IIS when Cosmos DB change trigger fired.
@@ -40,9 +42,10 @@ Cosmos Db has a data what applicationHost.config should be. And saburaiis agents
 
 SaburaIIS can configure multi partitions and multi regions.
 
-![image](https://user-images.githubusercontent.com/1011232/134007767-a40fb0ee-db05-4745-adfe-60a3ae07571f.png)
+![saburaiis-Page-1](https://user-images.githubusercontent.com/1011232/135226525-123e7d74-4f29-43d6-9d74-ba8caa940c99.jpg)
 
-## Tutorial
+
+## Get Started
 
 ### Step 1 - Create Service Principal
 
@@ -174,6 +177,36 @@ You can get the simple application at Public IP of VMSS.
 
 ![image](https://user-images.githubusercontent.com/1011232/134116287-5ba1a12e-8b99-4b58-acf4-bacce1270de1.png)
 
+## How to Manage SSL Certificate
+
+### Step 1 - Add Certtificate into KeyVault
+
+Generate or import certificate to key vault which is created at [Get Started - Step 2](#step-2---deploy-resources).
+If you don't have roles for edit, add IAM roles (ex. Key Vault Administrator) your account.
+
+![image](https://user-images.githubusercontent.com/1011232/135227613-0f9f4287-4fdb-4529-b405-bec74b333e27.png)
+
+### Step 2 - Modify Site Binding
+
+Add new binding to partition on AdminWeb. And select certificate store name and certificate hash.
+
+![image](https://user-images.githubusercontent.com/1011232/135229178-ee014289-71aa-48c5-8858-f8fa65fd69d9.png)
+
+After stage, apply changes and reload your site by https.
+
+## How to Manage App Configuration
+
+### Step 1 - Add Key Value into App Configuration
+
+![image](https://user-images.githubusercontent.com/1011232/135229691-cae5dbe1-f5f2-499c-b4c7-878113a0c8da.png)
+
+### Step 2 - Recycle Application Pool
+
+Update application pool recycle request on AdminWeb.
+
+![image](https://user-images.githubusercontent.com/1011232/135229899-fc007399-c3d1-4cbe-af2b-2991f1041e0f.png)
+
+After stage, apply changes and reload your site.
 
 ## How to Add Partition
 
