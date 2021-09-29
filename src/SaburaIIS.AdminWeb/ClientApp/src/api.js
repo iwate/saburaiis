@@ -44,8 +44,8 @@ export const removePartition = async (partition) => {
     throw (await getErrorMessage(response));
 }
 
-export const getInstances = async (partitionName) => {
-  const response = await fetch(`/api/partitions/${partitionName}/instances`);
+export const getInstances = async (partitionName, partitionEtag) => {
+  const response = await fetch(`/api/partitions/${partitionName}/instances?filter=${partitionEtag}`);
   if (!response.ok)
     throw new Error("fetch error");
   return await response.json();

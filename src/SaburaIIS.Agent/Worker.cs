@@ -23,7 +23,7 @@ namespace SaburaIIS.Agent
                 new AppConfiguration(config),
                 new CertificateStoreFactory(),
                 new Mapper(),
-                new Reporter(config.ScaleSetName!, store, loggerFactory.CreateLogger<Reporter>()),
+                new ServerConfigWatcher(loggerFactory.CreateLogger<ServerConfigWatcher>()),
                 loggerFactory.CreateLogger<WorkerModel>());
         }
 

@@ -188,10 +188,12 @@ namespace SaburaIIS
             await _instances.UpsertItemAsync(vm, new PartitionKey(vm.ScaleSetName));
         }
 
-        public virtual async Task<IEnumerable<VirtualMachine>> GetInstancesAsync(string vmss)
+        public virtual async Task<IEnumerable<VirtualMachine>> GetInstancesAsync(string vmss, string etag = null)
         {
             var result = new List<VirtualMachine>();
-            var query = new QueryDefinition("SELECT VALUE(T) FROM T WHERE T.ScaleSetName = @vmss").WithParameter("@vmss", vmss);
+            var query = string.IsNullOrEmpty(etag)
+                      ? new QueryDefinition("SELECT VALUE(T) FROM T WHERE T.ScaleSetName = @vmss").WithParameter("@vmss", vmss)
+                      : new QueryDefinition("SELECT VALUE(T) FROM T WHERE T.ScaleSetName = @vmss AND T.PartitionETag = @etag").WithParameter("@vmss", vmss).WithParameter("@etag", etag);
             using var feedIterator = _instances.GetItemQueryIterator<VirtualMachine>(query);
             while (feedIterator.HasMoreResults)
             {

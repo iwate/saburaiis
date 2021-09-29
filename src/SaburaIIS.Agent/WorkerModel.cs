@@ -25,10 +25,12 @@ namespace SaburaIIS.Agent
         private readonly AppConfiguration _appConfig;
         private readonly CertificateStoreFactory _certificateStoreFactory;
         private readonly Mapper _mapper;
-        private readonly Reporter _reporter;
+        private readonly ServerConfigWatcher _watcher;
         private ServerManager _manager;
         private ChangeTracker<Partition>? _tracker;
-        private IDictionary<string, DateTimeOffset> _lastRecycleAt; 
+        private IDictionary<string, DateTimeOffset> _lastRecycleAt;
+        private string _etag = string.Empty;
+        private static object @lock = new object();
 
         public WorkerModel(
             Config config,
@@ -38,7 +40,7 @@ namespace SaburaIIS.Agent
             AppConfiguration appConfig,
             CertificateStoreFactory certificateStoreFactory,
             Mapper mapper,
-            Reporter reporter,
+            ServerConfigWatcher watcher,
             ILogger<WorkerModel> logger
         )
         {
@@ -50,7 +52,7 @@ namespace SaburaIIS.Agent
             _appConfig = appConfig;
             _certificateStoreFactory = certificateStoreFactory;
             _mapper = mapper;
-            _reporter = reporter;
+            _watcher = watcher;
             _manager = new ServerManager();
             _lastRecycleAt = new Dictionary<string, DateTimeOffset>();
         }
@@ -74,7 +76,7 @@ namespace SaburaIIS.Agent
 
             try
             {
-                await _reporter.StartWatchAsync();
+                await _watcher.StartWatchAsync(Report);
             }
             catch (Exception ex)
             {
@@ -113,10 +115,12 @@ namespace SaburaIIS.Agent
                         if (!first && !await _tracker!.HasChangeAsync())
                             continue;
 
-                        var (partition, _) = await _store.GetPartitionAsync(partitionName);
+                        var (partition, etag) = await _store.GetPartitionAsync(partitionName);
 
                         if (partition == null || !partition.ScaleSets.Any(ss => ss.Name == _config.ScaleSetName))
                             break;
+
+                        _etag = etag;
 
                         await Update(partition);
 
@@ -182,6 +186,7 @@ namespace SaburaIIS.Agent
 
             _logger.LogInformation("Commit changes");
 
+            Console.WriteLine($"CommitChange {Thread.CurrentThread.ManagedThreadId}");
             _manager.CommitChanges();
 
             _logger.LogInformation("Rycycle application pools");
@@ -297,6 +302,28 @@ namespace SaburaIIS.Agent
             {
                 _lastRecycleAt[apppool.Name] = apppool.RecycleRequestAt;
             }
+        }
+
+        public async Task Report()
+        {
+            var manager = new ServerManager();
+            var applicationPools = _mapper.Map<ApplicationPool, POCO.ApplicationPool>(manager.ApplicationPools);
+            var sites = _mapper.Map<Site, POCO.Site>(manager.Sites);
+
+            await _store.SaveInstanceAsync(new VirtualMachine
+            {
+                ScaleSetName = _config.ScaleSetName,
+                Name = Environment.MachineName,
+                PartitionETag = _etag,
+                Current = new Snapshot
+                {
+                    ScaleSetName = _config.ScaleSetName,
+                    Name = Environment.MachineName,
+                    Timestamp = DateTimeOffset.Now,
+                    ApplicationPools = applicationPools.ToList(),
+                    Sites = sites.ToList()
+                }
+            });
         }
     }
 }

@@ -24,6 +24,7 @@
                 id = $"{_scaleSetName}|{_name}";
             }
         }
+        public string PartitionETag { get; set; }
         public Snapshot Current { get; set; }
     }
 }

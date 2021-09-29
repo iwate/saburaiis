@@ -4,12 +4,14 @@ import { Route, Switch, useHistory, useParams, useRouteMatch } from "react-route
 import { getInstances } from "../api";
 import { objectStateOptions } from "../constants";
 import { useBreadcrumb } from "../shared/Breadcrumb";
+import { usePartitionState } from "../state";
 import { History } from "./History";
 
 export const Instances = () => {
   const browserHistory = useHistory();
   const { path, url } = useRouteMatch();
   const { partitionName } = useParams();
+  const { origin } = usePartitionState(partitionName);
   const [instances, setInstances] = useState([]);
   useBreadcrumb([
     { text: partitionName, key: `/partitions/${partitionName}`, href: `/partitions/${partitionName}` },
@@ -17,7 +19,7 @@ export const Instances = () => {
   ]);
 
   const loadInstances = useCallback(async () => {
-    const instances = await getInstances(partitionName);
+    const instances = await getInstances(partitionName, origin['@etag']);
     setInstances(instances.reduce((a,b) => {
       return a.concat(b.current.sites.reduce((c,d) => {
         return c.concat(d.applications.reduce((e,f) => {

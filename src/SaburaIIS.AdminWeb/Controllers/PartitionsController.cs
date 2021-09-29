@@ -82,14 +82,14 @@ namespace SaburaIIS.AdminWeb.Controllers
         }
 
         [HttpGet("/api/partitions/{name}/instances")]
-        public async Task<IActionResult> GetInstances([FromRoute] string name)
+        public async Task<IActionResult> GetInstances([FromRoute] string name, [FromQuery]string filter)
         {
             var (partition, _) = await _store.GetPartitionAsync(name);
 
             if (partition == null)
                 return NotFound();
 
-            var sets = await Task.WhenAll(partition.ScaleSets.Select(ss => _store.GetInstancesAsync(ss.Name)).ToArray());
+            var sets = await Task.WhenAll(partition.ScaleSets.Select(ss => _store.GetInstancesAsync(ss.Name, filter)).ToArray());
 
             return Ok(sets.SelectMany(instances => instances));
         }
