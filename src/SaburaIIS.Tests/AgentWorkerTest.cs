@@ -179,7 +179,7 @@ namespace SaburaIIS.Tests
             mStore.Setup(m => m.CreatePartitionChangeTracker(It.IsAny<string>())).Returns(mTracker.Object);
             mStore.Setup(m => m.GetPartitionAsync(It.IsAny<string>())).Returns(Task.FromResult((partition, "*")));
 
-            var mReporter = new Mock<ServerConfigWatcher>(string.Empty, mStore.Object, Helpers.CreateTestLogger<ServerConfigWatcher>(), "%temp%");
+            var mReporter = new Mock<ServerConfigWatcher>(Helpers.CreateTestLogger<ServerConfigWatcher>(), "%temp%");
             mReporter.Setup(m => m.StartWatchAsync(It.IsAny<Func<Task>>())).Returns(Task.CompletedTask);
 
             var model = new Mock<WorkerModel>(config, mStore.Object, null, null, null, null, null, mReporter.Object, Helpers.CreateTestLogger<WorkerModel>());
@@ -233,7 +233,7 @@ namespace SaburaIIS.Tests
             mStore.Setup(m => m.CreatePartitionChangeTracker(It.IsAny<string>())).Returns(mTracker.Object);
             mStore.Setup(m => m.GetPartitionAsync(It.IsAny<string>())).Returns(Task.FromResult((partition, "*")));
 
-            var mReporter = new Mock<ServerConfigWatcher>(string.Empty, mStore.Object, Helpers.CreateTestLogger<ServerConfigWatcher>(), "%temp%");
+            var mReporter = new Mock<ServerConfigWatcher>(Helpers.CreateTestLogger<ServerConfigWatcher>(), "%temp%");
             mReporter.Setup(m => m.StartWatchAsync(It.IsAny<Func<Task>>())).Returns(Task.CompletedTask);
 
             var model = new Mock<WorkerModel>(config, mStore.Object, null, null, null, null, null, mReporter.Object, Helpers.CreateTestLogger<WorkerModel>());
@@ -291,7 +291,7 @@ namespace SaburaIIS.Tests
             mStore.Setup(m => m.CreatePartitionChangeTracker(It.IsAny<string>())).Returns(mTracker.Object);
             mStore.Setup(m => m.GetPartitionAsync(It.IsAny<string>())).Returns(Task.FromResult((partition, "*")));
 
-            var mReporter = new Mock<ServerConfigWatcher>(string.Empty, mStore.Object, Helpers.CreateTestLogger<ServerConfigWatcher>(), "%temp%");
+            var mReporter = new Mock<ServerConfigWatcher>(Helpers.CreateTestLogger<ServerConfigWatcher>(), "%temp%");
             mReporter.Setup(m => m.StartWatchAsync(It.IsAny<Func<Task>>())).Returns(Task.CompletedTask);
 
             var model = new Mock<WorkerModel>(config, mStore.Object, null, null, null, null, null, mReporter.Object, Helpers.CreateTestLogger<WorkerModel>());
