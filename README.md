@@ -194,13 +194,13 @@ Add new binding to partition on AdminWeb. And select certificate store name and 
 
 After stage, apply changes and reload your site by https.
 
+You can use [Key Vault Acmebot](https://github.com/shibayan/keyvault-acmebot) if you want to use Let's Encrypt or other acme issuer.
+
 ## How to Manage App Configuration
 
 ### Step 1 - Add Key Value into App Configuration
 
 ![image](https://user-images.githubusercontent.com/1011232/135229691-cae5dbe1-f5f2-499c-b4c7-878113a0c8da.png)
-
-You can use [Key Vault Acmebot](https://github.com/shibayan/keyvault-acmebot) if you want to use Let's Encrypt or other acme issuer.
 
 ### Step 2 - Recycle Application Pool
 
