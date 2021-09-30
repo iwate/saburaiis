@@ -21,7 +21,7 @@ This project's concept "Are azure managed services able to make it simple?"
 
 ![image](https://user-images.githubusercontent.com/1011232/134011966-d70b2737-81f0-412d-afd4-eda56c997e47.png)
 
-Cosmos Db has a data what applicationHost.config should be. And saburaiis agents update IIS on each VM. This relationship like a relationship between VirtualDOM and DOM.
+Cosmos DB has a data what applicationHost.config should be. And saburaiis agents update IIS on each VM. This relationship like a relationship between VirtualDOM and DOM.
 
 ![image](https://user-images.githubusercontent.com/1011232/134018841-a64dc31f-41ce-4a3c-ae10-6c5ae66068d0.png)
 
@@ -199,6 +199,8 @@ After stage, apply changes and reload your site by https.
 ### Step 1 - Add Key Value into App Configuration
 
 ![image](https://user-images.githubusercontent.com/1011232/135229691-cae5dbe1-f5f2-499c-b4c7-878113a0c8da.png)
+
+You can use [Key Vault Acmebot](https://github.com/shibayan/keyvault-acmebot) if you want to use Let's Encrypt or other acme issuer.
 
 ### Step 2 - Recycle Application Pool
 
