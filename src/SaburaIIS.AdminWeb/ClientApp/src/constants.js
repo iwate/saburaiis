@@ -76,6 +76,12 @@ export const sslFlagsOptions = [
   { key: 0, text: 'None' },
   { key: 1, text: 'SNI' },
   { key: 2, text: 'CentralCertStore' },
+  { key: 3, text: 'DisableHTTP2' },
+  { key: 4, text: 'DisableOCSPStp' },
+  { key: 5, text: 'DisableQUIC' },
+  { key: 6, text: 'DisableTLS13' },
+  { key: 7, text: 'DisableLegacyTLS' },
+  { key: 8, text: 'NegotiateClientCert' },
 ]
 
 export const logonMethodOptions = [
