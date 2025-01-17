@@ -14,10 +14,10 @@ namespace SaburaIIS.AdminWeb.Controllers
     public class PackagesController : ControllerBase
     {
         private readonly Config _config;
-        private readonly Store _store;
+        private readonly IStore _store;
         private readonly ILogger<PackagesController> _logger;
 
-        public PackagesController(IOptions<Config> options, Store store, ILogger<PackagesController> logger)
+        public PackagesController(IOptions<Config> options, IStore store, ILogger<PackagesController> logger)
         {
             _config = options.Value;
             _store = store;

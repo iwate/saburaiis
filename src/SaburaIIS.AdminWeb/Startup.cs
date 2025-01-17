@@ -24,11 +24,11 @@ namespace SaburaIIS.AdminWeb
             services.Configure<Config>(Configuration.GetSection("SaburaIIS"));
             services.AddSingleton(sp => {
                 var config = sp.GetRequiredService<IOptions<Config>>().Value;
-                return new Store(config);
+                return Factory.CreateStore(config);
             });
             services.AddSingleton(sp => {
                 var config = sp.GetRequiredService<IOptions<Config>>().Value;
-                return new KeyVault(config);
+                return Factory.CreateVault(config);
             });
 
             services.AddControllersWithViews()
@@ -43,7 +43,7 @@ namespace SaburaIIS.AdminWeb
             });
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, Store store)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IStore store)
         {
             store.InitAsync().Wait();
 

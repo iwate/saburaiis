@@ -16,6 +16,7 @@ namespace SaburaIIS
                         Name = "DefaultAppPool",
                         AutoStart = true,
                         Enable32BitAppOnWin64 = false,
+                        EnableEmulationOnWinArm64 = false,
                         ManagedPipelineMode = POCO.ManagedPipelineMode.Integrated,
                         ManagedRuntimeVersion = "v4.0",
                         QueueLength = 1000,

@@ -105,7 +105,7 @@ addPartitionCommand.Handler = CommandHandler.Create(async (
         AADClientSecret   = fallback(clientSecret,     envValue("AZURE_CLIENT_SECRET")),
     };
 
-    var store = new Store(config);
+    var store = Factory.CreateStore(config);
 
     await store.InitAsync();
 
@@ -156,7 +156,7 @@ exportCommand.Handler = CommandHandler.Create(async (
         AADClientSecret   = fallback(clientSecret,     envValue("AZURE_CLIENT_SECRET")),
     };
 
-    var store = new Store(config);
+    var store = Factory.CreateStore(config);
 
     await store.InitAsync();
 
@@ -224,7 +224,7 @@ importCommand.Handler = CommandHandler.Create(async (
         AADClientSecret   = fallback(clientSecret,     envValue("AZURE_CLIENT_SECRET")),
     };
 
-    var store = new Store(config);
+    var store = Factory.CreateStore(config);
 
     await store.InitAsync();
 
@@ -303,7 +303,7 @@ releaseCommand.Handler = CommandHandler.Create(async (
         AADClientSecret       = fallback(clientSecret,             envValue("AZURE_CLIENT_SECRET")),
     };
 
-    var store = new Store(config);
+    var store = Factory.CreateStore(config);
 
     await store.InitAsync();
 
@@ -329,7 +329,7 @@ releaseCommand.Handler = CommandHandler.Create(async (
 
     if (zip?.Exists == true)
     {
-        var storage = new Storage(config);
+        var storage = Factory.CreateStorage(config);
         await storage.UploadAsync(url, zip.FullName);
     }
     
@@ -404,7 +404,7 @@ modifyPathCommand.Handler = CommandHandler.Create(async (
         AADClientSecret   = fallback(clientSecret,     envValue("AZURE_CLIENT_SECRET")),
     };
 
-    var store = new Store(config);
+    var store = Factory.CreateStore(config);
 
     await store.InitAsync();
 

@@ -8,9 +8,9 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
-namespace SaburaIIS
+namespace SaburaIIS.Azure
 {
-    public class Store
+    public class CosmosDbStore : IStore
     {
         private readonly Config _config;
         private CosmosClient _client;
@@ -18,7 +18,7 @@ namespace SaburaIIS
         private Container _packages;
         private Container _instances;
         private Container _snapshots;
-        public Store(Config config)
+        public CosmosDbStore(Config config)
         {
             _config = config;
         }
@@ -31,7 +31,8 @@ namespace SaburaIIS
                 Id = $"{_config.ContainerNamePrefix ?? string.Empty}partitions",
                 PartitionKeyPath = $"/{nameof(Partition.Name)}",
                 DefaultTimeToLive = -1,
-                IndexingPolicy = new IndexingPolicy { 
+                IndexingPolicy = new IndexingPolicy
+                {
                     IncludedPaths =
                     {
                         new IncludedPath { Path = "/" }
@@ -93,9 +94,9 @@ namespace SaburaIIS
             await _partitions.DeleteItemAsync<Partition>(partition.id, new PartitionKey(partition.Name), new ItemRequestOptions { IfMatchEtag = etag });
         }
 
-        public virtual async Task<string> SearchPartitionAsync(string vmss)
+        public virtual async Task<string> SearchPartitionAsync(string scaleSetName)
         {
-            var query = new QueryDefinition("SELECT VALUE(T.Name) FROM T JOIN ss IN T.ScaleSets WHERE ss.Name = @vmss").WithParameter("@vmss", vmss);
+            var query = new QueryDefinition("SELECT VALUE(T.Name) FROM T JOIN ss IN T.ScaleSets WHERE ss.Name = @scaleSetName").WithParameter("@scaleSetName", scaleSetName);
             using var feedIterator = _partitions.GetItemQueryIterator<string>(query);
             while (feedIterator.HasMoreResults)
             {
@@ -154,7 +155,7 @@ namespace SaburaIIS
             }
         }
 
-        public virtual async Task<IEnumerable<string>> GetReleaseVersionsAsync(string packageName)
+        public virtual async Task<IEnumerable<string>> GetReleaseVersionsAsync(string packageName, int limit = 30)
         {
             var result = new List<string>();
             var query = new QueryDefinition("SELECT r.Version FROM T JOIN r IN T.Releases WHERE T.Name = @name").WithParameter("@name", packageName);
@@ -188,12 +189,12 @@ namespace SaburaIIS
             await _instances.UpsertItemAsync(vm, new PartitionKey(vm.ScaleSetName));
         }
 
-        public virtual async Task<IEnumerable<VirtualMachine>> GetInstancesAsync(string vmss, string etag = null)
+        public virtual async Task<IEnumerable<VirtualMachine>> GetInstancesAsync(string scaleSetName, string etag = null)
         {
             var result = new List<VirtualMachine>();
             var query = string.IsNullOrEmpty(etag)
-                      ? new QueryDefinition("SELECT VALUE(T) FROM T WHERE T.ScaleSetName = @vmss").WithParameter("@vmss", vmss)
-                      : new QueryDefinition("SELECT VALUE(T) FROM T WHERE T.ScaleSetName = @vmss AND T.PartitionETag = @etag").WithParameter("@vmss", vmss).WithParameter("@etag", etag);
+                      ? new QueryDefinition("SELECT VALUE(T) FROM T WHERE T.ScaleSetName = @scaleSetName").WithParameter("@scaleSetName", scaleSetName)
+                      : new QueryDefinition("SELECT VALUE(T) FROM T WHERE T.ScaleSetName = @scaleSetName AND T.PartitionETag = @etag").WithParameter("@scaleSetName", scaleSetName).WithParameter("@etag", etag);
             using var feedIterator = _instances.GetItemQueryIterator<VirtualMachine>(query);
             while (feedIterator.HasMoreResults)
             {
@@ -204,11 +205,11 @@ namespace SaburaIIS
             return result;
         }
 
-        public virtual async Task<VirtualMachine> GetInstanceAsync(string vmss, string name)
+        public virtual async Task<VirtualMachine> GetInstanceAsync(string scaleSetName, string name)
         {
             var result = new List<VirtualMachine>();
-            var query = new QueryDefinition("SELECT VALUE(T) FROM T WHERE T.ScaleSetName = @vmss AND T.Name = @name")
-                            .WithParameter("@vmss", vmss)
+            var query = new QueryDefinition("SELECT VALUE(T) FROM T WHERE T.ScaleSetName = @scaleSetName AND T.Name = @name")
+                            .WithParameter("@scaleSetName", scaleSetName)
                             .WithParameter("@name", name);
             using var feedIterator = _instances.GetItemQueryIterator<VirtualMachine>(query);
             while (feedIterator.HasMoreResults)
@@ -226,11 +227,11 @@ namespace SaburaIIS
             await _snapshots.UpsertItemAsync(snapshot, new PartitionKey(snapshot.Name));
         }
 
-        public virtual async Task<IEnumerable<DateTimeOffset>> GetSnapshotsAsync(string scaleSet, string name)
+        public virtual async Task<IEnumerable<DateTimeOffset>> GetSnapshotsAsync(string scaleSetName, string name)
         {
             var result = new List<DateTimeOffset>();
-            var query = new QueryDefinition("SELECT VALUE(T.Timestamp) FROM T WHERE T.ScaleSetName = @scaleSet AND T.Name = @name ORDER BY T.Timestamp DESC")
-                .WithParameter("@scaleSet", scaleSet)
+            var query = new QueryDefinition("SELECT VALUE(T.Timestamp) FROM T WHERE T.ScaleSetName = @scaleSetName AND T.Name = @name ORDER BY T.Timestamp DESC")
+                .WithParameter("@scaleSetName", scaleSetName)
                 .WithParameter("@name", name);
             using var feedIterator = _snapshots.GetItemQueryIterator<DateTimeOffset>(query);
             while (feedIterator.HasMoreResults)
@@ -242,10 +243,10 @@ namespace SaburaIIS
             return result;
         }
 
-        public virtual async Task<Snapshot> GetSnapshotAsync(string scaleSet, string name, string timestamp)
+        public virtual async Task<Snapshot> GetSnapshotAsync(string scaleSetName, string name, string timestamp)
         {
-            var query = new QueryDefinition("SELECT VALUE(T) FROM T WHERE T.ScaleSetName = @scaleSet AND T.Name = @name AND T.Timestamp = @timestamp")
-                .WithParameter("@scaleSet", scaleSet)
+            var query = new QueryDefinition("SELECT VALUE(T) FROM T WHERE T.ScaleSetName = @scaleSetName AND T.Name = @name AND T.Timestamp = @timestamp")
+                .WithParameter("@scaleSetName", scaleSetName)
                 .WithParameter("@name", name)
                 .WithParameter("@timestamp", timestamp);
             using var feedIterator = _snapshots.GetItemQueryIterator<Snapshot>(query);
@@ -258,22 +259,22 @@ namespace SaburaIIS
             return null;
         }
 
-        public virtual ChangeTracker<Partition> CreatePartitionChangeTracker(string partitionName)
+        public virtual IChangeTracker CreatePartitionChangeTracker(string partitionName)
         {
             var feedRange = FeedRange.FromPartitionKey(new PartitionKey(partitionName));
             var startAt = ChangeFeedStartFrom.Now(feedRange);
             var feed = _partitions.GetChangeFeedIterator<Partition>(startAt, ChangeFeedMode.Incremental);
 
-            return new ChangeTracker<Partition>(feed);
+            return new CosmosDbChangeTracker<Partition>(feed);
         }
 
-        public virtual ChangeTracker<VirtualMachine> CreateInstancesChangeTracker(string scaleSetName)
+        public virtual IChangeTracker CreateInstancesChangeTracker(string scaleSetName)
         {
             var feedRange = FeedRange.FromPartitionKey(new PartitionKey(scaleSetName));
             var startAt = ChangeFeedStartFrom.Now(feedRange);
             var feed = _instances.GetChangeFeedIterator<VirtualMachine>(startAt, ChangeFeedMode.Incremental);
 
-            return new ChangeTracker<VirtualMachine>(feed);
+            return new CosmosDbChangeTracker<VirtualMachine>(feed);
         }
         private const string TOKEN_ENDPOINT = "https://management.azure.com/";
         private const string KEYS_ENDPOINT = "https://management.azure.com/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.DocumentDB/databaseAccounts/{2}/listKeys?api-version=2019-12-12";
@@ -290,14 +291,14 @@ namespace SaburaIIS
 
             var result = await httpClient.PostAsync(endpoint, new StringContent(""));
 
-            dynamic keys = await System.Text.Json.JsonSerializer.DeserializeAsync<System.Dynamic.ExpandoObject> (await result.Content.ReadAsStreamAsync());
+            dynamic keys = await System.Text.Json.JsonSerializer.DeserializeAsync<System.Dynamic.ExpandoObject>(await result.Content.ReadAsStreamAsync());
 
             return new CosmosClient(config.GetCosmosDbEndpoint(), keys.primaryMasterKey.ToString());
         }
 
         private static CosmosClient CreateClientByRBAC(Config config)
         {
-            var servicePrincipal = new ClientSecretCredential(config.AADTenantId,config.AADClientId,config.AADClientSecret);
+            var servicePrincipal = new ClientSecretCredential(config.AADTenantId, config.AADClientId, config.AADClientSecret);
             return new CosmosClient(config.GetCosmosDbEndpoint(), servicePrincipal);
         }
 

@@ -5,16 +5,15 @@ using SaburaIIS.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
-namespace SaburaIIS
+namespace SaburaIIS.Azure
 {
-    public class KeyVault
+    public class AzKeyVault : IVault
     {
         private readonly CertificateClient _certClient;
         private readonly SecretClient _secretClient;
-        public KeyVault(Config config)
+        public AzKeyVault(Config config)
         {
             _certClient = CreateCertificateClient(config);
             _secretClient = CreateSecretClient(config);

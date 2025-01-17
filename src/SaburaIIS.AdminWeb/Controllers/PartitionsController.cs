@@ -14,10 +14,10 @@ namespace SaburaIIS.AdminWeb.Controllers
     public class PartitionsController : ControllerBase
     {
         private readonly Config _config;
-        private readonly Store _store;
+        private readonly IStore _store;
         private readonly ILogger<PartitionsController> _logger;
 
-        public PartitionsController(IOptions<Config> options, Store store, ILogger<PartitionsController> logger)
+        public PartitionsController(IOptions<Config> options, IStore store, ILogger<PartitionsController> logger)
         {
             _config = options.Value;
             _store = store;

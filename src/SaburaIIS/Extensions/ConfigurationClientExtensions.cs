@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace SaburaIIS.Agent.Extensions
+namespace SaburaIIS.Extensions
 {
-    public static class ConfigurationClientExtensions
+    internal static class ConfigurationClientExtensions
     {
         public static async Task<IEnumerable<KeyValuePair<string, string>>> GetKeyValues(this ConfigurationClient client, string partitionName, string apppoolName)
         {

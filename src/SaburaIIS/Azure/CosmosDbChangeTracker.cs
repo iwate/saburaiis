@@ -1,13 +1,13 @@
 ﻿using Microsoft.Azure.Cosmos;
-using System;
 using System.Threading.Tasks;
 
-namespace SaburaIIS
+namespace SaburaIIS.Azure
 {
-    public class ChangeTracker<T> : IDisposable
+
+    public class CosmosDbChangeTracker<T> : IChangeTracker
     {
         private readonly FeedIterator<T> _feed;
-        public ChangeTracker(FeedIterator<T> feed)
+        public CosmosDbChangeTracker(FeedIterator<T> feed)
         {
             _feed = feed;
         }
