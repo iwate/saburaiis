@@ -1,8 +1,10 @@
 ﻿using Azure.Identity;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Azure.Cosmos.Serialization.HybridRow;
 using Microsoft.Azure.Services.AppAuthentication;
 using SaburaIIS.Models;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -129,6 +131,12 @@ namespace SaburaIIS.Azure
             await _packages.UpsertItemAsync(package, new PartitionKey(package.Name), new ItemRequestOptions { IfMatchEtag = etag });
         }
 
+        public virtual async Task RemovePackageAsync(Package package, string etag)
+        {
+            await _packages.DeleteItemAsync<Partition>(package.id, new PartitionKey(package.Name), new ItemRequestOptions { IfMatchEtag = etag });
+        }
+
+
         public virtual async Task<IEnumerable<string>> GetPackageNamesAsync()
         {
             var result = new List<string>();
@@ -144,21 +152,32 @@ namespace SaburaIIS.Azure
 
         public virtual async Task<(Package, string)> GetPackageAsync(string name)
         {
-            try
+            var query = new QueryDefinition("""
+                SELECT T.id, T._etag, T.Name 
+                FROM T 
+                WHERE T.Name = @name
+                OFFSET 0 LIMIT 1
+                """).WithParameter("@name", name);
+            using var feedIterator = _packages.GetItemQueryIterator<dynamic>(query);
+            while (feedIterator.HasMoreResults)
             {
-                var response = await _packages.ReadItemAsync<Package>(name, new PartitionKey(name));
-                return (response.Resource, response.ETag);
+                var response = await feedIterator.ReadNextAsync();
+                foreach (var package in response)
+                    return (new Package { id = package.id, Name = package.Name, Releases = [] }, package._etag);
             }
-            catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-            {
-                return (null, null);
-            }
+            return (null, null);
         }
 
         public virtual async Task<IEnumerable<string>> GetReleaseVersionsAsync(string packageName, int limit = 30)
         {
             var result = new List<string>();
-            var query = new QueryDefinition("SELECT r.Version FROM T JOIN r IN T.Releases WHERE T.Name = @name").WithParameter("@name", packageName);
+            var query = new QueryDefinition("""
+                SELECT r.Version FROM T 
+                JOIN r IN T.Releases 
+                WHERE T.Name = @name
+                ORDER BY T.ReleaseAt DESC
+                OFFSET 0 LIMIT @limit
+                """).WithParameter("@name", packageName).WithParameter("@limit", limit);
             using var feedIterator = _packages.GetItemQueryIterator<Release>(query);
             while (feedIterator.HasMoreResults)
             {

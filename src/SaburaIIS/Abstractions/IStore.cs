@@ -53,6 +53,14 @@ namespace SaburaIIS
         Task SavePackageAsync(Package package, string etag);
 
         /// <summary>
+        /// Remove a package data
+        /// </summary>
+        /// <param name="package">A package object</param>
+        /// <param name="etag">Current ETag string of the package</param>
+        /// <returns></returns>
+        Task RemovePackageAsync(Package package, string etag);
+
+        /// <summary>
         /// List package name
         /// </summary>
         /// <returns></returns>

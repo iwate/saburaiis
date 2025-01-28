@@ -44,9 +44,10 @@ namespace SaburaIIS.AdminWeb.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            await _store.SavePartitionAsync(Defaults.CreatePartition(model.Name, _config), "*");
+            var partition = Defaults.CreatePartition(model.Name, _config);
+            await _store.SavePartitionAsync(partition, "*");
 
-            return CreatedAtAction(nameof(GetPartition), null);
+            return Created($"/api/partitions/{partition.Name}", partition);
         }
 
         [HttpPut("/api/partitions/{name}")]

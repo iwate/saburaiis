@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Azure.Cosmos;
+using Newtonsoft.Json;
 using SaburaIIS.Models;
 using System;
 using System.Collections.Generic;
@@ -101,7 +102,24 @@ namespace SaburaIIS.Local
             var package = JsonConvert.DeserializeObject<Package>(json);
 
             return (package, etag);
-            
+        }
+
+        public virtual async Task RemovePackageAsync(Package package, string etag)
+        {
+            var path = PackageFile(package.Name);
+
+            if (File.Exists(path))
+            {
+                var currentJson = await File.ReadAllTextAsync(path);
+                var currentETag = GenerateETag(currentJson);
+
+                if (currentETag != etag && etag != "*")
+                {
+                    throw new InvalidOperationException("Invalid ETag");
+                }
+
+                File.Delete(path);
+            }
         }
 
         public Task<IEnumerable<string>> GetPackageNamesAsync()
@@ -159,7 +177,7 @@ namespace SaburaIIS.Local
             var json = await File.ReadAllTextAsync(path);
             var package = JsonConvert.DeserializeObject<Package>(json);
 
-            return package.Releases.Select(release => release.Version).ToList();
+            return package.Releases.OrderByDescending(release => release.ReleaseAt).Select(release => release.Version).ToList();
         }
 
         public async Task<Snapshot> GetSnapshotAsync(string scaleSetName, string name, string timestamp)
@@ -224,7 +242,7 @@ namespace SaburaIIS.Local
                 var currentJson = await File.ReadAllTextAsync(path);
                 var currentETag = GenerateETag(currentJson);
 
-                if (currentETag != etag)
+                if (currentETag != etag && etag != "*")
                 {
                     throw new InvalidOperationException("Invalid ETag");
                 }
@@ -270,7 +288,7 @@ namespace SaburaIIS.Local
                 var currentJson = await File.ReadAllTextAsync(path);
                 var currentETag = GenerateETag(currentJson);
 
-                if (currentETag != etag)
+                if (currentETag != etag && etag != "*")
                 {
                     throw new InvalidOperationException("Invalid ETag");
                 }
@@ -290,7 +308,7 @@ namespace SaburaIIS.Local
                 var currentJson = await File.ReadAllTextAsync(path);
                 var currentETag = GenerateETag(currentJson);
 
-                if (currentETag != etag)
+                if (currentETag != etag && etag != "*")
                 {
                     throw new InvalidOperationException("Invalid ETag");
                 }
