@@ -23,7 +23,7 @@ namespace SaburaIIS
             _storages = storages ?? throw new ArgumentNullException();
         }
 
-        public bool CanDownload(string url) => throw new NotImplementedException();
+        public bool CanDownload(string url) => _storages.Any(s => s.CanDownload(url));
 
         public virtual async Task<Stream> DownloadAsync(string url)
         {
@@ -31,7 +31,7 @@ namespace SaburaIIS
             return await storage.DownloadAsync(url);
         }
 
-        public bool CanUpload(string url) => throw new NotImplementedException();
+        public bool CanUpload(string url) => _storages.Any(s => s.CanUpload(url));
 
         public virtual async Task UploadAsync(string url, string path)
         {

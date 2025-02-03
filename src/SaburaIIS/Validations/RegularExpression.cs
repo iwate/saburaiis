@@ -4,6 +4,6 @@
     {
         public const string PackageName = @"[a-zA-Z0-9\._-]{0,64}";
         public const string ReleaseVersion = @"[a-zA-Z0-9\._-]{0,32}";
-        public const string ReleaseUrl = @"https://.+/.*\.zip(\?.*)?$";
+        public const string ReleaseUrl = @"(https|file)://.*/.*\.zip(\?.*)?$";
     }
 }
