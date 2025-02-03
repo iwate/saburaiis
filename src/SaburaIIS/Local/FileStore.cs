@@ -22,7 +22,7 @@ namespace SaburaIIS.Local
         private string InstancesDir => Path.Combine(_dir, "instances");
         private string InstanceFile(string name) => Path.Combine(InstancesDir, name + ".json");
         private string SnapshotsDir(string scaleSetName, string name) => Path.Combine(_dir, "snapshots", scaleSetName, name);
-        private string SnapshotFile(string scaleSetName, string name, string timestamp) => Path.Combine(SnapshotsDir(scaleSetName, name),  timestamp + ".json");
+        private string SnapshotFile(string scaleSetName, string name, DateTimeOffset datetime) => Path.Combine(SnapshotsDir(scaleSetName, name), datetime.ToUnixTimeMilliseconds().ToString() + ".json");
 
         public FileStore(Config config)
         {
@@ -42,7 +42,7 @@ namespace SaburaIIS.Local
                 Directory.CreateDirectory(dir);
             }
 
-            var path = SnapshotFile(snapshot.ScaleSetName, snapshot.Name, snapshot.Timestamp.ToUnixTimeMilliseconds().ToString());
+            var path = SnapshotFile(snapshot.ScaleSetName, snapshot.Name, snapshot.Timestamp);
             var json = JsonConvert.SerializeObject(snapshot);
 
             await File.WriteAllTextAsync(path, json);
@@ -85,7 +85,7 @@ namespace SaburaIIS.Local
             var json = await File.ReadAllTextAsync(path);
             var scaleSet = JsonConvert.DeserializeObject<IEnumerable<VirtualMachine>>(json);
 
-            return scaleSet;
+            return scaleSet.Where(item => item.PartitionETag == etag);
         }
 
         public async Task<(Package, string)> GetPackageAsync(string name)
@@ -182,7 +182,7 @@ namespace SaburaIIS.Local
 
         public async Task<Snapshot> GetSnapshotAsync(string scaleSetName, string name, string timestamp)
         {
-            var path = SnapshotFile(scaleSetName, name, timestamp);
+            var path = SnapshotFile(scaleSetName, name, DateTimeOffset.Parse(timestamp));
             if (!File.Exists(path))
                 return null;
 

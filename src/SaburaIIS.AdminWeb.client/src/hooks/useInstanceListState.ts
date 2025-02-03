@@ -26,8 +26,8 @@ function fetcher([,partitionName, etag]:[string, string | undefined, string | nu
   return getInstances(partitionName, etag);
 }
 
-export default function useInstanceListState(partitionName: string|undefined, etag: string|null|undefined): [state: IInstance[] | undefined, error: string|null, actions: IInstancesActions] {
-  const {data, error, mutate} = useSWR([`partitions/${partitionName}`, partitionName, etag], fetcher);
+export default function useInstanceListState(partitionName: string | undefined, etag: string | null | undefined): [state: IInstance[] | undefined, error: string | null, actions: IInstancesActions] {
+  const { data, error, mutate } = useSWR([`partitions/${partitionName}/instances?${etag}`, partitionName, etag], fetcher);
   const refresh = () => {
     mutate();
   }

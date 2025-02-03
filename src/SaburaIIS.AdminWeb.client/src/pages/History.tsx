@@ -37,8 +37,8 @@ async function getDetail(partitionName: string | undefined, instance: IVirtualMa
   return {
     label: item.text,
     value: (item.timestamp === instance?.current.timestamp) 
-          ? instance?.current
-          : await getSnapshot(partitionName, instance.scaleSetName, instance.name, item.timestamp)
+      ? instance?.current
+      : await getSnapshot(partitionName, instance.scaleSetName, instance.name, item.timestamp)
   }
 }
 
@@ -50,7 +50,7 @@ function useSelectedSnapshotPairState(partitionName: string | undefined, instanc
     (async () => {
       const [r, l] = selected;
       const left = l ? await getDetail(partitionName, instance, l) : null;
-      const right = r ? await getDetail(partitionName, instance, l) : null;
+      const right = r ? await getDetail(partitionName, instance, r) : null;
       setValue({ left, right })
     })()
   }, [selected, instance, partitionName])
@@ -69,17 +69,15 @@ export default function History() {
   const [snapshots, loadError2] = useSnapshotListState(partitionName, scaleSetName, instanceName);
   const [errors, setErrors] = useErrorsState(loadError1, loadError2);
   const [pair, setSelected] = useSelectedSnapshotPairState(partitionName, instance);
-  
-  const detailList = useMemo(() => {
-    const columns = [
-      {
-        key: 'timestamp',
-        name: 'Timestamp',
-        fieldName: 'text',
-        minWidth: 200,
-      },
-    ]
-
+  const columns = [
+    {
+      key: 'timestamp',
+      name: 'Timestamp',
+      fieldName: 'text',
+      minWidth: 200,
+    },
+  ]
+  const items = useMemo(() => {
     const items: SnapshotDetailsListItem[] = [];
 
     if (instance) {
@@ -89,28 +87,41 @@ export default function History() {
     if (snapshots) {
       items.push(...snapshots.map(timestamp => ({ timestamp, text: formatter.format(new Date(timestamp)) })))
     }
-    
-    const _selected: number[] = [];
-    const selection = new Selection<SnapshotDetailsListItem>({
-      onSelectionChanged() {
-        if (selection.getSelectedCount() <= 2) {
-          _selected.splice(0, _selected.length, ...selection.getSelectedIndices());
-          setSelected(selection.getSelection());
-        }
-        else {
-          for (const index of _selected.slice(1)) {
-            selection.setIndexSelected(index, false, false);
-            break;
-          }
-        }
-      },
-      getKey(item) {
-        return item.timestamp;
-      },
-      selectionMode: SelectionMode.multiple,
-    });
 
-    return <DetailsList
+    return items;
+  }, [instance, snapshots]) 
+
+  // @ts-expect-error sample code allowed this style.
+  const selection = new Selection<SnapshotDetailsListItem>({
+    onSelectionChanged() {
+      if (selection.getSelectedCount() <= 2) {
+        setSelected(selection.getSelection());
+      }
+      else {
+        const indeces = selection.getSelectedIndices();
+        for (const index of indeces.slice(1)) {
+          selection.setIndexSelected(index, false, false);
+          break;
+        }
+      }
+    },
+    selectionMode: SelectionMode.multiple,
+  });
+  
+  if (instance == null)
+    return <div>Loading...</div>
+
+  return <Stack horizontal verticalFill>
+    {errors.map((err, index) => (
+      <MessageBar
+        key={index}
+        onDismiss={() => setErrors([...errors.slice(0, index), ...errors.slice(index + 1)])}
+        messageBarType={MessageBarType.error}
+        isMultiline={false}
+        dismissButtonAriaLabel="Close"
+      >{err}</MessageBar>
+    ))}
+    <DetailsList
       columns={columns}
       items={items}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -129,22 +140,6 @@ export default function History() {
         },
       }}
     />
-  }, [instance, snapshots]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  if (instance == null)
-    return <div>Loading...</div>
-
-  return <Stack horizontal verticalFill>
-    {errors.map((err, index) => (
-      <MessageBar
-        key={index}
-        onDismiss={() => setErrors([...errors.slice(0, index), ...errors.slice(index + 1)])}
-        messageBarType={MessageBarType.error}
-        isMultiline={false}
-        dismissButtonAriaLabel="Close"
-      >{err}</MessageBar>
-    ))}
-    {detailList}
     <Stack grow>
       <Stack horizontal>
         <StackItem grow style={{ textAlign: 'center' }}><label>{pair.left?.label || 'Not selected'}</label></StackItem>

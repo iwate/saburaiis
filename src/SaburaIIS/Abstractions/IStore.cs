@@ -99,7 +99,7 @@ namespace SaburaIIS
         /// List a virtual machine data
         /// </summary>
         /// <param name="scaleSetName">Grouping name for VMs</param>
-        /// <param name="etag">Current ETag string or null</param>
+        /// <param name="etag">Filter ETag string or null</param>
         /// <returns>List of VirtualMachine objects</returns>
         Task<IEnumerable<VirtualMachine>> GetInstancesAsync(string scaleSetName, string etag = null);
 
