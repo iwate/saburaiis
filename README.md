@@ -72,25 +72,14 @@ Create core resources (CosmoDB, KeyVault, Storage), vnet and a partition (VMSS, 
 
 ### Step 3 - Setup WebAdmin
 
-Download SaburaIIS.WebAdmin.zip [latest release](https://github.com/iwate/saburaiis/releases/latest)
-
-Extract zip and configure `appsettings.json`
+Install CLI tool via dotnet tool command and set env values.
+And execute `serve` command/
 
 ```
-{
-  "Logging": {
-    "LogLevel": {
-    "Default": "Information",
-    "Microsoft": "Warning",
-    "Microsoft.Hosting.Lifetime": "Information"
-    }
-  },
-  "AllowedHosts": "*",
-  "SaburaIIS": {
-    "SubscriptionId": "<Your subscription id>",
-    "ResourceGroupName": "<Core resource group name(which has cosmosdb, keyvault and storage)>"
-  }
-}
+PS> dotnet tool install -g SaburaIIS.CLI
+PS> $env:AZURE_SUBSCRIPTION_ID="<Your subscription id>"
+PS> $env:SABURAIIS_RG_NAME="<Core resource group name(which has cosmosdb, keyvault and storage)>"
+PS> saburaiis serve
 ```
 
 AdminWeb use managed identity to access resources. You need setup on visual studio (https://docs.microsoft.com/en-us/azure/app-service/app-service-web-tutorial-connect-msi?tabs=windowsclient%2Cdotnet#set-up-visual-studio)
@@ -98,19 +87,13 @@ AdminWeb use managed identity to access resources. You need setup on visual stud
 Also, You use service principal insted of managed identity if you want to.
 
 ```
-{
-  ...
-  "SaburaIIS": {
-    "SubscriptionId": "<Your subscription id>",
-    "ResourceGroupName": "<Core resource group name(which has cosmosdb, keyvault and storage)>",
-    "AADTenantId": "<Your tenant id>",
-    "AADClientId": "<Service Principal appId(name)>",
-    "AADClientSecret": "<Service Principal password>"
-  }
-}
+PS> $env:AZURE_SUBSCRIPTION_ID="<Your subscription id>"
+PS> $env:SABURAIIS_RG_NAME="<Core resource group name(which has cosmosdb, keyvault and storage)>"
+PS> $env:AZURE_TENANT_ID="<Your tenant id>"
+PS> $env:AZURE_CLIENT_ID="<Service Principal appId(name)>"
+PS> $env:AZURE_CLIENT_SECRET="<Service Principal password>"
+PS> saburaiis serve
 ```
-
-Execute SaburaIIS.WebAdmin.exe and access https://localhost:5001/ on your browser.
 
 ### Step 4 Create Partition settings on WebAdmin
 
@@ -134,19 +117,7 @@ Navigate to `Instances` and wait active instances
 
 ![image](https://user-images.githubusercontent.com/1011232/134124285-4e7226da-4f0f-4b02-a4d7-cb325ab4ca71.png)
 
-### Step 6 - Setup CLI
-
-Install CLI tool via dotnet tool command and set env values.
-
-```
-PS> dotnet tool install -g SaburaIIS.CLI
-PS> $env:AZURE_SUBSCRIPTION_ID="<Your subscription id>"
-PS> $env:SABURAIIS_RG_NAME="<Core resource group name(which has cosmosdb, keyvault and storage)>"
-PS> $env:AZURE_TENANT_ID="<Your tenant id>"
-PS> $env:AZURE_CLIENT_ID="<Service Principal appId(name)>"
-PS> $env:AZURE_CLIENT_SECRET="<Service Principal password>"
-```
-### Step 7 - Upload Application Package
+### Step 6 - Upload Application Package
 
 Create simple applciation package(zip) and execute `saburaiis release` command.
 ```
@@ -155,7 +126,7 @@ PS> Compress-Archive -Path .\index.html -DestinationPath index.zip
 PS> saburaiis release EmptySite v0.0.1 --zip .\index.zip
 ```
 
-### Step 8 - Deploy Application
+### Step 7 - Deploy Application
 
 Modify application physical path and update partition settings. saburaiis agent parse last two directories of  physical path are package name and version. (`%SystemDrive%\inetpub\site\{package name}\{version}`)
 
