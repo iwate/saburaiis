@@ -93,7 +93,7 @@ export default function Site() {
       iconProps: { iconName: 'Clear' },
       onClick: () => {
         const partition = context.partitions[partitionName!];
-        const sites = [...partition.sites.filter(x => x.name === siteName)];
+        const sites = [...partition.sites.filter(x => x.name !== siteName)];
         const local = {
           ...partition,
           sites
@@ -208,7 +208,6 @@ export default function Site() {
               />
               <FlagController
                 labels={[
-                  `#${index} SSL: None`,
                   `#${index} SSL: SNI`,
                   `#${index} SSL: Central Cert Store`,
                   `#${index} SSL: Disable HTTP2`,
@@ -216,6 +215,7 @@ export default function Site() {
                   `#${index} SSL: Disable QUIC`,
                   `#${index} SSL: Disable TLS1.3`,
                   `#${index} SSL: Disable Legacy TLS`,
+                  `#${index} SSL: Negotiate Client Cert`,
                 ]}
                 name={`bindings.${index}.sslFlags`}
                 control={control}

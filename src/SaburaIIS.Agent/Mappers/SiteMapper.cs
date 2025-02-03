@@ -91,7 +91,10 @@ namespace SaburaIIS.Agent.Mappers
             //    Password = src.VirtualDirectoryDefaults.Password
             //};
             dst.ServerAutoStart = src.ServerAutoStart;
-            dst.State = (POCO.ObjectState)(int)src.State;
+            try { 
+                dst.State = (POCO.ObjectState)(int)src.State;
+            } catch (Exception) { 
+            }
         }
 
         public POCO.Site Map(Site src)

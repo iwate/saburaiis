@@ -12,6 +12,14 @@ namespace SaburaIIS.Agent.Transformers
             if (delta.Method == DeltaMethod.Add)
             {
                 var app = colleciton.Add((string?)delta.Key, string.Empty, 80);
+                while (app.Applications.Count > 0)
+                {
+                    app.Applications.RemoveAt(0);
+                }
+                while (app.Bindings.Count > 0)
+                {
+                    app.Bindings.RemoveAt(0);
+                }
                 Transformer.Transform(app, delta);
             }
             else if (delta.Method == DeltaMethod.Remove)

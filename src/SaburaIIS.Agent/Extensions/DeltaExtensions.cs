@@ -18,12 +18,21 @@ namespace SaburaIIS.Agent.Extensions
             var apppools = new List<string>();
             foreach (var dsite in dSites)
             {
-                var site = sites.First(s => s.Name == (string?)dsite.Key);
+                var site = sites.FirstOrDefault(s => s.Name == (string?)dsite.Key);
+                if (site == null)
+                {
+                    continue;
+                }
+
                 foreach (var dapp in dsite.NestCollectionProperties["Applications"])
                 {
                     if (dapp.Method == DeltaMethod.Update && dapp.HasDiff)
                     {
-                        var app = site.Applications.First(a => a.Path == (string?)dapp.Key);
+                        var app = site.Applications.FirstOrDefault(a => a.Path == (string?)dapp.Key);
+                        if (app == null)
+                        {
+                            continue; 
+                        }
                         apppools.Add(app.ApplicationPoolName);
                     }
                 }
