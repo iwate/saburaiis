@@ -96,7 +96,7 @@ export default function ApplicationPool() {
       iconProps: { iconName: 'Clear' },
       onClick: () => {
         const partition = context.partitions[partitionName!];
-        const applicationPools = [...partition.applicationPools.filter(x => x.name === apppoolName)];
+        const applicationPools = [...partition.applicationPools.filter(x => x.name !== apppoolName)];
         const local = {
           ...partition,
           applicationPools
