@@ -40,6 +40,8 @@ if (!target) {
   exit(1);
 }
 
+console.log(`Proxy target: ${target}`)
+
 // https://vite.dev/config/
 export default defineConfig({
   build: {
