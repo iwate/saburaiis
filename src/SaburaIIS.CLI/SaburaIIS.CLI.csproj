@@ -14,7 +14,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\SaburaIIS.AdminWeb\SaburaIIS.AdminWeb.csproj" />
     <ProjectReference Include="..\SaburaIIS\SaburaIIS.csproj" />
   </ItemGroup>
+
+  <Target Name="CopyAssets" AfterTargets="Publish">
+    <ItemGroup>
+      <AssetFiles Include="..\SaburaIIS.AdminWeb.client\dist\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(AssetFiles)" DestinationFolder="$(PublishDir)wwwroot\%(RecursiveDir)" />
+  </Target>
 
 </Project>
