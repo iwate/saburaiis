@@ -42,7 +42,7 @@ jobs:
     - name: Packaging 
       shell: pwsh
       run: |
-        Compress-Archive -Path ./src/SaburaIIS.Agent/bin/Release/net5.0/win-x64/publish/* -DestinationPath SaburaIIS.Agent.zip
+        Compress-Archive -Path ./src/SaburaIIS.Agent/bin/Release/net8.0/win-x64/publish/* -DestinationPath SaburaIIS.Agent.zip
 
     - name: Get Upload URL
       id: geturl
