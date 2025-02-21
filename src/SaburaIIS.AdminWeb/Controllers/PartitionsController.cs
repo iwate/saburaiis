@@ -14,10 +14,10 @@ namespace SaburaIIS.AdminWeb.Controllers
     public class PartitionsController : ControllerBase
     {
         private readonly Config _config;
-        private readonly Store _store;
+        private readonly IStore _store;
         private readonly ILogger<PartitionsController> _logger;
 
-        public PartitionsController(IOptions<Config> options, Store store, ILogger<PartitionsController> logger)
+        public PartitionsController(IOptions<Config> options, IStore store, ILogger<PartitionsController> logger)
         {
             _config = options.Value;
             _store = store;
@@ -44,9 +44,10 @@ namespace SaburaIIS.AdminWeb.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            await _store.SavePartitionAsync(Defaults.CreatePartition(model.Name, _config), "*");
+            var partition = Defaults.CreatePartition(model.Name, _config);
+            await _store.SavePartitionAsync(partition, "*");
 
-            return CreatedAtAction(nameof(GetPartition), null);
+            return Created($"/api/partitions/{partition.Name}", partition);
         }
 
         [HttpPut("/api/partitions/{name}")]

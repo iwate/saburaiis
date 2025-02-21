@@ -1,9 +1,13 @@
-﻿using SaburaIIS;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
+using SaburaIIS;
 using SaburaIIS.CLI;
 using SaburaIIS.Json;
 using SaburaIIS.Models;
 using SaburaIIS.Validations;
 using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
@@ -13,6 +17,8 @@ using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 var rootCommand = new RootCommand("SaburaIIS command-line tool");
+
+rootCommand.Name = "saburaiis";
 
 rootCommand.AddGlobalOption(new Option<string?>("--subscription") 
 {
@@ -26,7 +32,7 @@ rootCommand.AddGlobalOption(new Option<string?>("--resource-group")
 });
 rootCommand.AddGlobalOption(new Option<string?>("--cosmosdb-name")
 { 
-    Description= "CosmosDB name (fallback to SABURAIIS_DB_NAME or SABURAIIS_RG_NAME environment variable)",
+    Description= "CosmosDB name for state store (fallback to SABURAIIS_DB_NAME or SABURAIIS_RG_NAME environment variable)",
     IsRequired = false
 });
 rootCommand.AddGlobalOption(new Option<string?>("--cosmosdb-endpoint") 
@@ -36,7 +42,7 @@ rootCommand.AddGlobalOption(new Option<string?>("--cosmosdb-endpoint")
 });
 rootCommand.AddGlobalOption(new Option<string?>("--storage-name")
 {
-    Description = "Storage Account name (fallback to SABURAIIS_STORAGE_NAME or SABURAIIS_RG_NAME environment variable)",
+    Description = "Storage Account name for package storage (fallback to SABURAIIS_STORAGE_NAME or SABURAIIS_RG_NAME environment variable)",
     IsRequired = false
 });
 rootCommand.AddGlobalOption(new Option<string?>("--storage-container-name", getDefaultValue: () => "packages")
@@ -46,7 +52,7 @@ rootCommand.AddGlobalOption(new Option<string?>("--storage-container-name", getD
 });
 rootCommand.AddGlobalOption(new Option<string?>("--storage-container-endpoint")
 {
-    Description = "Storage Blob Container endpoint (fallback to SABURAIIS_STORAGE_CONTAINER_ENDPOINT environment variable or 'https://{--storage-name}.blob.core.windows.net/{--storage-container-name}/')",
+    Description = "Storage Blob Container endpoint for package storage (fallback to SABURAIIS_STORAGE_CONTAINER_ENDPOINT environment variable or 'https://{--storage-name}.blob.core.windows.net/{--storage-container-name}/')",
     IsRequired = false
 });
 rootCommand.AddGlobalOption(new Option<string?>("--tenant-id") 
@@ -63,6 +69,21 @@ rootCommand.AddGlobalOption(new Option<string?>("--client-secret")
 {
     Description = "Service principal client secret (fallback to AZURE_CLIENT_SECRET environment variable)",
     IsRequired = false 
+});
+rootCommand.AddGlobalOption(new Option<string?>("--file-store-path")
+{
+    Description = "Directory path for state store",
+    IsRequired = false
+});
+rootCommand.AddGlobalOption(new Option<string?>("--file-storage-path")
+{
+    Description = "Directory path for Package storage",
+    IsRequired = false
+});
+rootCommand.AddGlobalOption(new Option<bool?>("--use-machine-vault")
+{
+    Description = "Use machine certificate store for certificate vault",
+    IsRequired = false
 });
 
 var jsonOptions = new JsonSerializerOptions
@@ -92,7 +113,10 @@ addPartitionCommand.Handler = CommandHandler.Create(async (
     string? cosmosdbEndpoint,
     string? tenantId,
     string? clientId,
-    string? clientSecret) =>
+    string? clientSecret,
+    string? fileStorePath,
+    string? fileStoragePath,
+    bool? useMachineVault) =>
 {
     var config = new Config
     {
@@ -103,9 +127,12 @@ addPartitionCommand.Handler = CommandHandler.Create(async (
         AADTenantId       = fallback(tenantId,         envValue("AZURE_TENANT_ID")),
         AADClientId       = fallback(clientId,         envValue("AZURE_CLIENT_ID")),
         AADClientSecret   = fallback(clientSecret,     envValue("AZURE_CLIENT_SECRET")),
+        FileStoreDirectoryPath     = fallback(fileStorePath,     envValue("SABURAIIS_FILE_STORE_DIR_PATH")),
+        FileStorageDirectoryPath   = fallback(fileStoragePath,   envValue("SABURAIIS_FILE_STORAGE_DIR_PATH")),
+        UseMachineVault = bool.Parse(fallback(useMachineVault?.ToString(), envValue("SABURAIIS_USE_MACHINE_VAULT")) ?? "false"),
     };
 
-    var store = new Store(config);
+    var store = Factory.CreateStore(config);
 
     await store.InitAsync();
 
@@ -143,7 +170,10 @@ exportCommand.Handler = CommandHandler.Create(async (
     string? cosmosdbEndpoint,
     string? tenantId,
     string? clientId,
-    string? clientSecret) =>
+    string? clientSecret,
+    string? fileStorePath,
+    string? fileStoragePath,
+    bool? useMachineVault) =>
 {
     var config = new Config
     {
@@ -154,9 +184,12 @@ exportCommand.Handler = CommandHandler.Create(async (
         AADTenantId       = fallback(tenantId,         envValue("AZURE_TENANT_ID")),
         AADClientId       = fallback(clientId,         envValue("AZURE_CLIENT_ID")),
         AADClientSecret   = fallback(clientSecret,     envValue("AZURE_CLIENT_SECRET")),
+        FileStoreDirectoryPath     = fallback(fileStorePath,     envValue("SABURAIIS_FILE_STORE_DIR_PATH")),
+        FileStorageDirectoryPath   = fallback(fileStoragePath,   envValue("SABURAIIS_FILE_STORAGE_DIR_PATH")),
+        UseMachineVault = bool.Parse(fallback(useMachineVault?.ToString(), envValue("SABURAIIS_USE_MACHINE_VAULT")) ?? "false"),
     };
 
-    var store = new Store(config);
+    var store = Factory.CreateStore(config);
 
     await store.InitAsync();
 
@@ -208,7 +241,10 @@ importCommand.Handler = CommandHandler.Create(async (
     string? cosmosdbEndpoint,
     string? tenantId,
     string? clientId,
-    string? clientSecret) =>
+    string? clientSecret,
+    string? fileStorePath,
+    string? fileStoragePath,
+    bool? useMachineVault) =>
 {
     if (!input.Exists)
         throw new ArgumentException($"{nameof(input.FullName)} is not exists");
@@ -222,9 +258,12 @@ importCommand.Handler = CommandHandler.Create(async (
         AADTenantId       = fallback(tenantId,         envValue("AZURE_TENANT_ID")),
         AADClientId       = fallback(clientId,         envValue("AZURE_CLIENT_ID")),
         AADClientSecret   = fallback(clientSecret,     envValue("AZURE_CLIENT_SECRET")),
+        FileStoreDirectoryPath     = fallback(fileStorePath,     envValue("SABURAIIS_FILE_STORE_DIR_PATH")),
+        FileStorageDirectoryPath   = fallback(fileStoragePath,   envValue("SABURAIIS_FILE_STORAGE_DIR_PATH")),
+        UseMachineVault = bool.Parse(fallback(useMachineVault?.ToString(), envValue("SABURAIIS_USE_MACHINE_VAULT")) ?? "false"),
     };
 
-    var store = new Store(config);
+    var store = Factory.CreateStore(config);
 
     await store.InitAsync();
 
@@ -281,7 +320,10 @@ releaseCommand.Handler = CommandHandler.Create(async (
     string? storageContainerEndpoint,
     string? tenantId,
     string? clientId,
-    string? clientSecret) =>
+    string? clientSecret,
+    string? fileStorePath,
+    string? fileStoragePath,
+    bool? useMachineVault) =>
 {
     if (!Regex.IsMatch(package, RegularExpression.PackageName))
         throw new ArgumentException($"{nameof(package)} is invalid pattern ({RegularExpression.PackageName})");
@@ -301,9 +343,12 @@ releaseCommand.Handler = CommandHandler.Create(async (
         AADTenantId           = fallback(tenantId,                 envValue("AZURE_TENANT_ID")),
         AADClientId           = fallback(clientId,                 envValue("AZURE_CLIENT_ID")),
         AADClientSecret       = fallback(clientSecret,             envValue("AZURE_CLIENT_SECRET")),
+        FileStoreDirectoryPath     = fallback(fileStorePath,       envValue("SABURAIIS_FILE_STORE_DIR_PATH")),
+        FileStorageDirectoryPath   = fallback(fileStoragePath,     envValue("SABURAIIS_FILE_STORAGE_DIR_PATH")),
+        UseMachineVault = bool.Parse(fallback(useMachineVault?.ToString(), envValue("SABURAIIS_USE_MACHINE_VAULT")) ?? "false"),
     };
 
-    var store = new Store(config);
+    var store = Factory.CreateStore(config);
 
     await store.InitAsync();
 
@@ -329,7 +374,7 @@ releaseCommand.Handler = CommandHandler.Create(async (
 
     if (zip?.Exists == true)
     {
-        var storage = new Storage(config);
+        var storage = Factory.CreateStorage(config);
         await storage.UploadAsync(url, zip.FullName);
     }
     
@@ -382,7 +427,10 @@ modifyPathCommand.Handler = CommandHandler.Create(async (
     string? cosmosdbEndpoint,
     string? tenantId,
     string? clientId,
-    string? clientSecret) =>
+    string? clientSecret,
+    string? fileStorePath,
+    string? fileStoragePath,
+    bool? useMachineVault) =>
 {
     if (!path.Exists)
         throw new ArgumentException($"{path.FullName} is not exists");
@@ -402,9 +450,12 @@ modifyPathCommand.Handler = CommandHandler.Create(async (
         AADTenantId       = fallback(tenantId,         envValue("AZURE_TENANT_ID")),
         AADClientId       = fallback(clientId,         envValue("AZURE_CLIENT_ID")),
         AADClientSecret   = fallback(clientSecret,     envValue("AZURE_CLIENT_SECRET")),
+        FileStoreDirectoryPath     = fallback(fileStorePath,     envValue("SABURAIIS_FILE_STORE_DIR_PATH")),
+        FileStorageDirectoryPath   = fallback(fileStoragePath,   envValue("SABURAIIS_FILE_STORAGE_DIR_PATH")),
+        UseMachineVault = bool.Parse(fallback(useMachineVault?.ToString(), envValue("SABURAIIS_USE_MACHINE_VAULT")) ?? "false"),
     };
 
-    var store = new Store(config);
+    var store = Factory.CreateStore(config);
 
     await store.InitAsync();
 
@@ -433,6 +484,48 @@ modifyPathCommand.Handler = CommandHandler.Create(async (
     await File.WriteAllTextAsync(path.FullName, JsonSerializer.Serialize(partitionData, jsonOptions));
 });
 
-rootCommand.AddCommand(modifyPathCommand);
+var serveCommand = new Command("serve", "Serve web admin")
+{
+};
+
+serveCommand.Handler = CommandHandler.Create(async (
+    string? subscription,
+    string? resourceGroup,
+    string? cosmosdbName,
+    string? cosmosdbEndpoint,
+    string? tenantId,
+    string? clientId,
+    string? clientSecret,
+    string? fileStorePath,
+    string? fileStoragePath,
+    bool? useMachineVault) =>
+{
+    var hostBuilder = 
+        Host.CreateDefaultBuilder()
+            .ConfigureHostConfiguration(hostConfig =>
+            {
+                hostConfig.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["SaburaIIS:SubscriptionId"]    = subscription,
+                    ["SaburaIIS:ResourceGroupName"] = resourceGroup,
+                    ["SaburaIIS:CosmosDbName"]      = cosmosdbName,
+                    ["SaburaIIS:CosmosDbEndpoint"]  = cosmosdbEndpoint,
+                    ["SaburaIIS:AADTenantId"]       = tenantId,
+                    ["SaburaIIS:AADClientId"]       = clientId,
+                    ["SaburaIIS:AADClientSecret"]   = clientSecret,
+                    ["SaburaIIS:FileStorageDirectoryPath"]   = fileStoragePath,
+                    ["SaburaIIS:FileStoreDirectoryPath"]     = fileStorePath,
+                    ["SaburaIIS:UseMachineVault"]            = useMachineVault?.ToString(),
+                });
+            })
+            .ConfigureWebHostDefaults(webBuilder =>
+            {
+                webBuilder.UseStartup<Startup>();
+            });
+
+    await hostBuilder.Build().RunAsync();
+});
+
+rootCommand.AddCommand(serveCommand);
 
 return rootCommand.InvokeAsync(args).Result;

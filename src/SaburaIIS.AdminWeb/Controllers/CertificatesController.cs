@@ -10,10 +10,10 @@ namespace SaburaIIS.AdminWeb.Controllers
     [ApiController]
     public class CertificatesController : ControllerBase
     {
-        private readonly KeyVault _keyVault;
+        private readonly IVault _keyVault;
         private readonly ILogger<CertificatesController> _logger;
 
-        public CertificatesController(KeyVault keyVault, ILogger<CertificatesController> logger)
+        public CertificatesController(IVault keyVault, ILogger<CertificatesController> logger)
         {
             _keyVault = keyVault;
             _logger = logger;

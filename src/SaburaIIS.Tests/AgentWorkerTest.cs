@@ -30,7 +30,7 @@ namespace SaburaIIS.Tests
             };
             var test456RawData = new byte[] { 1, 0, 1, 0 };
             var config = new Agent.Config { ResourceGroupName = "saburaiis" };
-            var mKeyVault = new Mock<KeyVault>(config);
+            var mKeyVault = new Mock<IVault>();
             mKeyVault.Setup(m => m.GetCertificatesAsync()).Returns(() => Task.FromResult(certificates.Take(2)));
             mKeyVault.Setup(m => m.GetCertificateAsync("test456", null)).Returns(() => Task.FromResult(test456RawData));
 
@@ -111,10 +111,10 @@ namespace SaburaIIS.Tests
 
             var config = new Agent.Config { ResourceGroupName = "saburaiis" };
 
-            var mStorage = new Mock<Storage>(config);
+            var mStorage = new Mock<IStorage>();
             mStorage.Setup(m => m.DownloadAsync(It.IsAny<string>())).Returns(() => Task.FromResult<Stream>(stream));
 
-            var mStore = new Mock<Store>(config);
+            var mStore = new Mock<IStore>();
             mStore.Setup(m => m.GetReleaseAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(() => Task.FromResult(new Models.Release { }));
 
             var model = new WorkerModel(config, mStore.Object, mStorage.Object, null, null, null, null, null, Helpers.CreateTestLogger<WorkerModel>());
@@ -170,10 +170,10 @@ namespace SaburaIIS.Tests
             { 
                 ScaleSets = new []{ new Models.VirtualMachineScaleSet { Name = config.ScaleSetName } }
             };
-            var mTracker = new Mock<ChangeTracker<Models.Partition>>(null);
+            var mTracker = new Mock<IChangeTracker>();
             mTracker.Setup(m => m.HasChangeAsync()).Returns(Task.FromResult(true));
 
-            var mStore = new Mock<Store>(config);
+            var mStore = new Mock<IStore>();
             mStore.Setup(m => m.InitAsync()).Returns(Task.CompletedTask);
             mStore.Setup(m => m.SearchPartitionAsync(config.ScaleSetName)).Returns(Task.FromResult("test-partition"));
             mStore.Setup(m => m.CreatePartitionChangeTracker(It.IsAny<string>())).Returns(mTracker.Object);
@@ -219,10 +219,10 @@ namespace SaburaIIS.Tests
             {
                 ScaleSets = new[] { new Models.VirtualMachineScaleSet { Name = config.ScaleSetName } }
             };
-            var mTracker = new Mock<ChangeTracker<Models.Partition>>(null);
+            var mTracker = new Mock<IChangeTracker>();
             mTracker.Setup(m => m.HasChangeAsync()).Returns(Task.FromResult(true));
 
-            var mStore = new Mock<Store>(config);
+            var mStore = new Mock<IStore>();
             var initCount = 0;
             mStore.Setup(m => m.InitAsync()).Returns(() => {
                 if (++initCount == 3)
@@ -275,10 +275,10 @@ namespace SaburaIIS.Tests
             {
                 ScaleSets = new[] { new Models.VirtualMachineScaleSet { Name = config.ScaleSetName } }
             };
-            var mTracker = new Mock<ChangeTracker<Models.Partition>>(null);
+            var mTracker = new Mock<IChangeTracker>();
             mTracker.Setup(m => m.HasChangeAsync()).Returns(Task.FromResult(true));
 
-            var mStore = new Mock<Store>(config);
+            var mStore = new Mock<IStore>();
             var assignCount = 0;
             mStore.Setup(m => m.InitAsync()).Returns(Task.CompletedTask);
             mStore.Setup(m => m.SearchPartitionAsync(config.ScaleSetName)).Returns(() =>

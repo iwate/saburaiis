@@ -19,25 +19,25 @@ namespace SaburaIIS.Agent
     {
         private readonly Config _config;
         private readonly ILogger<WorkerModel> _logger;
-        private readonly Store _store;
-        private readonly Storage _storage;
-        private readonly KeyVault _keyVault;
-        private readonly AppConfiguration _appConfig;
+        private readonly IStore _store;
+        private readonly IStorage _storage;
+        private readonly IVault _keyVault;
+        private readonly IVariables _appConfig;
         private readonly CertificateStoreFactory _certificateStoreFactory;
         private readonly Mapper _mapper;
         private readonly ServerConfigWatcher _watcher;
         private ServerManager _manager;
-        private ChangeTracker<Partition>? _tracker;
+        private IChangeTracker? _tracker;
         private IDictionary<string, DateTimeOffset> _lastRecycleAt;
         private string _etag = string.Empty;
         private static object @lock = new object();
 
         public WorkerModel(
             Config config,
-            Store store,
-            Storage storage,
-            KeyVault keyVault,
-            AppConfiguration appConfig,
+            IStore store,
+            IStorage storage,
+            IVault keyVault,
+            IVariables appConfig,
             CertificateStoreFactory certificateStoreFactory,
             Mapper mapper,
             ServerConfigWatcher watcher,
@@ -182,7 +182,7 @@ namespace SaburaIIS.Agent
 
             _logger.LogInformation("Update environment variables of application pools. ({pools})", apppoolNames);
 
-            await new EnvironmentVariablesWriter(_manager).WriteAsync(apppoolNames, apppoolName => _appConfig.GetConfiguration(partition.Name, apppoolName));
+            await new EnvironmentVariablesWriter(_manager).WriteAsync(apppoolNames, apppoolName => _appConfig.GetVariables(partition.Name, apppoolName));
 
             _logger.LogInformation("Commit changes");
 

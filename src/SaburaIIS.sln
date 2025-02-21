@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30907.101
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35027.167
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SaburaIIS", "SaburaIIS\SaburaIIS.csproj", "{1B4F6E66-6B85-48EF-84DE-74E36C165774}"
 EndProject
@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SaburaIIS.Agent", "SaburaII
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SaburaIIS.CLI", "SaburaIIS.CLI\SaburaIIS.CLI.csproj", "{AEDC5096-6335-42C1-AB9D-50EC29AD171E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SaburaIIS.AdminWeb", "SaburaIIS.AdminWeb\SaburaIIS.AdminWeb.csproj", "{79DBFE78-BE1F-4055-A67E-2FDAB4AF0AD3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SaburaIIS.AdminWeb", "SaburaIIS.AdminWeb\SaburaIIS.AdminWeb.csproj", "{79DBFE78-BE1F-4055-A67E-2FDAB4AF0AD3}"
+EndProject
+Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "SaburaIIS.AdminWeb.client", "SaburaIIS.AdminWeb.client\SaburaIIS.AdminWeb.client.esproj", "{7238055C-4962-4D9A-A59D-24226F9BBABA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,12 @@ Global
 		{79DBFE78-BE1F-4055-A67E-2FDAB4AF0AD3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{79DBFE78-BE1F-4055-A67E-2FDAB4AF0AD3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{79DBFE78-BE1F-4055-A67E-2FDAB4AF0AD3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7238055C-4962-4D9A-A59D-24226F9BBABA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7238055C-4962-4D9A-A59D-24226F9BBABA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7238055C-4962-4D9A-A59D-24226F9BBABA}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{7238055C-4962-4D9A-A59D-24226F9BBABA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7238055C-4962-4D9A-A59D-24226F9BBABA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7238055C-4962-4D9A-A59D-24226F9BBABA}.Release|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

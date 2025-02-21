@@ -14,10 +14,10 @@ namespace SaburaIIS.AdminWeb.Controllers
     public class PackagesController : ControllerBase
     {
         private readonly Config _config;
-        private readonly Store _store;
+        private readonly IStore _store;
         private readonly ILogger<PackagesController> _logger;
 
-        public PackagesController(IOptions<Config> options, Store store, ILogger<PackagesController> logger)
+        public PackagesController(IOptions<Config> options, IStore store, ILogger<PackagesController> logger)
         {
             _config = options.Value;
             _store = store;
@@ -37,17 +37,22 @@ namespace SaburaIIS.AdminWeb.Controllers
         }
 
         [HttpGet("/api/packages/{name}")]
-        public async Task<Package> GetPackageAsync(string name)
+        public async Task<IActionResult> GetPackageAsync(string name)
         {
             var (package, etag) = await _store.GetPackageAsync(name);
+
+            if (package == null)
+                return NotFound();
+
             Response.Headers.Add("ETag", etag);
-            return package;
+            
+            return Ok(new { package.Name });
         }
 
         [HttpGet("/api/packages/{name}/releases")]
         public async Task<IEnumerable<string>> GetReleaseVersionsAsync(string name)
         {
-            return (await _store.GetReleaseVersionsAsync(name)).OrderByDescending(version => version);
+            return await _store.GetReleaseVersionsAsync(name);
         }
 
         [HttpGet("/api/packages/{name}/releases/{version}")]
@@ -62,12 +67,14 @@ namespace SaburaIIS.AdminWeb.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            await _store.SavePackageAsync(new Package
+            var package = new Package
             {
                 Name = model.Name,
-            }, "*");
+            };
 
-            return CreatedAtAction(nameof(GetPackageAsync), new { name = model.Name });
+            await _store.SavePackageAsync(package, "*");
+
+            return Created($"/api/packages/{package.Name}", package);
         }
 
         [HttpPost("/api/packages/{name}/releases")]
@@ -95,7 +102,21 @@ namespace SaburaIIS.AdminWeb.Controllers
 
             await _store.SavePackageAsync(package, etag);
 
-            return CreatedAtAction(nameof(GetReleaseAsync), release);
+            return Created($"/api/packages/{name}/releases/{release.Version}", release);
         }
+
+        [HttpDelete("/api/packages/{name}")]
+        public async Task<IActionResult> DeletePackageAsync([FromRoute]string name, [FromHeader(Name = "If-Match")] string etag)
+        {
+            var (package, _) = await _store.GetPackageAsync(name);
+
+            if (package == null)
+                return NotFound();
+
+            await _store.RemovePackageAsync(package, etag);
+
+            return NoContent();
+        }
+
     }
 }

@@ -34,6 +34,7 @@ namespace SaburaIIS.POCO
 		public Boolean AutoStart { get; set; }
 		public ApplicationPoolCpu Cpu { get; set; }
 		public Boolean Enable32BitAppOnWin64 { get; set; }
+		public Boolean EnableEmulationOnWinArm64 { get; set; }
 		public ApplicationPoolFailure Failure { get; set; }
 		public ManagedPipelineMode ManagedPipelineMode { get; set; }
 		public StartMode StartMode { get; set; }
@@ -60,6 +61,7 @@ namespace SaburaIIS.POCO
 		public Boolean AutoStart { get; set; }
 		public ApplicationPoolCpu Cpu { get; set; }
 		public Boolean Enable32BitAppOnWin64 { get; set; }
+		public Boolean EnableEmulationOnWinArm64 { get; set; }
 		public ApplicationPoolFailure Failure { get; set; }
 		public ManagedPipelineMode ManagedPipelineMode { get; set; }
 		public StartMode StartMode { get; set; }
@@ -244,12 +246,12 @@ namespace SaburaIIS.POCO
 	}
 	public partial class String
 	{
-		public Int32 Length { get; set; }
 		public Char this[Int32 index]
 		{
 			get => throw new NotImplementedException();
 			set => throw new NotImplementedException();
 		}
+		public Int32 Length { get; set; }
 	}
 	public partial class Object
 	{
@@ -445,6 +447,7 @@ namespace SaburaIIS.POCO
 		DisableQUIC = 16,
 		DisableTLS13 = 32,
 		DisableLegacyTLS = 64,
+		NegotiateClientCert = 128,
 	}
 	public enum AddressFamily
 	{

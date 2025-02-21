@@ -18,19 +18,19 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Setup .NET
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 5.0.x
-        node-version: 14.x
+        dotnet-version: 8.x
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22
     - name: Restore dependencies
       working-directory: src
       run: dotnet restore
     - name: Build dotnet
       working-directory: src
       run: dotnet build --no-restore
-    - name: Build client app
-      working-directory: src/SaburaIIS.AdminWeb/ClientApp
-      run: npm run build
     - name: Test
       working-directory: src
       run: dotnet test --no-build --verbosity normal

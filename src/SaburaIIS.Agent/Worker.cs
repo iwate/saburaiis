@@ -14,13 +14,12 @@ namespace SaburaIIS.Agent
         public Worker(IOptions<Config> options, ILoggerFactory loggerFactory)
         {
             var config = options.Value;
-            var store = new Store(config);
             _model = new WorkerModel(
                 config,
-                store,
-                new Storage(config),
-                new KeyVault(config),
-                new AppConfiguration(config),
+                Factory.CreateStore(config),
+                Factory.CreateStorage(config),
+                Factory.CreateVault(config),
+                Factory.CreateVariables(config),
                 new CertificateStoreFactory(),
                 new Mapper(),
                 new ServerConfigWatcher(loggerFactory.CreateLogger<ServerConfigWatcher>()),

@@ -11,11 +11,13 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 5.0.x
-        node-version: 14.x
-
+        dotnet-version: 8.x
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22
     - name: Restore dependencies
       working-directory: src
       run: dotnet restore
@@ -31,16 +33,11 @@ jobs:
     - name: Publish Agent
       working-directory: src/SaburaIIS.Agent/
       run: dotnet publish -c Release --self-contained --no-build
-
-    - name: Publish Web Admin
-      working-directory: src/SaburaIIS.AdminWeb/
-      run: dotnet publish -c Release --self-contained --no-build
-
+      
     - name: Packaging 
       shell: pwsh
       run: |
         Compress-Archive -Path ./src/SaburaIIS.Agent/bin/Release/net5.0/win-x64/publish/* -DestinationPath SaburaIIS.Agent.zip
-        Compress-Archive -Path ./src/SaburaIIS.AdminWeb/bin/Release/net5.0/publish/* -DestinationPath SaburaIIS.AdminWeb.zip
 
     - name: Get Upload URL
       id: geturl
@@ -57,16 +54,6 @@ jobs:
         upload_url: ${{ steps.geturl.outputs.upload_url }}
         asset_path: ./SaburaIIS.Agent.zip
         asset_name: SaburaIIS.Agent.zip
-        asset_content_type: application/zip
-
-    - name: Upload Web Admin
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.geturl.outputs.upload_url }}
-        asset_path: ./SaburaIIS.AdminWeb.zip
-        asset_name: SaburaIIS.AdminWeb.zip
         asset_content_type: application/zip
     
     - name: Pack CLI
