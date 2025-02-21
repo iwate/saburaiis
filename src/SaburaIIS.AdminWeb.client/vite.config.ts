@@ -7,6 +7,11 @@ import 'dotenv/config'
 import { defineConfig, UserConfigExport } from 'vite'
 import react from '@vitejs/plugin-react'
 
+const target =
+  env.ASPNETCORE_HTTPS_PORT ? `https://localhost:${env.ASPNETCORE_HTTPS_PORT}`
+    : env.ASPNETCORE_URLS ? env.ASPNETCORE_URLS.split(';')[0]
+      : null;
+
 const baseFolder
   = env.APPDATA !== undefined && env.APPDATA !== ''
     ? `${env.APPDATA}/ASP.NET/https`
@@ -30,19 +35,14 @@ if (process.env.GITHUB_ACTIONS != 'true') {
       throw new Error('Could not create certificate.')
     }
   }
+
+  if (!target) {
+    console.error('ASPNETCORE_HTTPS_PORT or ASPNETCORE_URLS environment variables should be set.');
+    exit(1);
+  }
+
+  console.log(`Proxy target: ${target}`)
 }
-
-const target =
-  env.ASPNETCORE_HTTPS_PORT ? `https://localhost:${env.ASPNETCORE_HTTPS_PORT}`
-    : env.ASPNETCORE_URLS ? env.ASPNETCORE_URLS.split(';')[0]
-      : null;
-
-if (!target) {
-  console.error('ASPNETCORE_HTTPS_PORT or ASPNETCORE_URLS environment variables should be set.');
-  exit(1);
-}
-
-console.log(`Proxy target: ${target}`)
 
 // https://vite.dev/config/
 export default defineConfig({
