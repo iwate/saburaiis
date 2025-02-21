@@ -18,9 +18,14 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: 22
+
     - name: Restore dependencies
       working-directory: src
       run: dotnet restore
+
+    - name: Restore dependencies of Agent
+      working-directory: src/SaburaIIS.Agent/
+      run: dotnet restore -r win-x64
 
     - name: Build
       working-directory: src
